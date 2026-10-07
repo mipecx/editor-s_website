@@ -7,6 +7,8 @@
   --mut: #d9d3c5;
   --sans: "Onest", system-ui, "Segoe UI", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --dock: 0;
+  --hlgone: 0;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -26,11 +28,7 @@ body {
   font: 400 14.4px/1.55 var(--sans);
   -webkit-text-size-adjust: 100%;
 }
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
+/* плавность прокрутки делает JS (магнит и якоря); браузерный smooth конфликтовал с инерцией тачпада */
 a {
   color: inherit;
 }
@@ -97,11 +95,13 @@ section[data-cut]::before {
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
-  height: 30px;
+  top: -1px;
+  height: 31px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   background: var(--y);
   color: var(--ink);
-  font: 700 9.6px/24px var(--mono);
+  font: 700 9.6px/25px var(--mono);
   padding: 0 clamp(20px, 6vw, 96px);
   z-index: 2;
   background-image: repeating-linear-gradient(90deg, transparent 0 22px, rgba(0, 0, 0, 0.18) 22px 24px);
@@ -142,6 +142,24 @@ textarea:focus-visible {
   padding: 14px 22px;
   border-radius: 999px;
   cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.ghost:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 214, 10, 0.28);
+}
+.ghost:disabled {
+  background: transparent;
+  color: var(--mut);
+  border-color: #4a463d;
+  cursor: default;
+  opacity: 0.55;
 }
 header {
   position: fixed;
@@ -173,7 +191,7 @@ header > * {
   width: 38px;
   height: 38px;
   border: 2px solid var(--w);
-  border-radius: 10px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
   font: 800 16px/1 var(--sans);
@@ -184,8 +202,8 @@ header > * {
 .logo i::after {
   content: "";
   position: absolute;
-  right: -5px;
-  top: -5px;
+  right: -1px;
+  top: -1px;
   width: 11px;
   height: 11px;
   border-radius: 50%;
@@ -260,17 +278,17 @@ header > * {
   z-index: 30;
 }
 #fl {
-  background: radial-gradient(120% 90% at 50% 50%, rgba(255, 214, 10, 0) 35%, rgba(255, 214, 10, 0.9) 100%);
+  background: radial-gradient(120% 90% at 50% 50%, rgba(255, 214, 10, 0) 45%, rgba(255, 214, 10, 0.4) 100%);
 }
 #fl.on {
-  animation: fl 0.9s ease-in-out;
+  animation: fl 1.2s ease-in-out;
 }
 @keyframes fl {
   0% {
     opacity: 0;
   }
   30% {
-    opacity: 0.3;
+    opacity: 0.2;
   }
   100% {
     opacity: 0;
@@ -280,11 +298,11 @@ header > * {
   background: var(--y);
 }
 #fl.hard.on {
-  animation: flh 0.25s ease-out;
+  animation: flh 0.5s ease-out;
 }
 @keyframes flh {
   0% {
-    opacity: 0.85;
+    opacity: 0.2;
   }
   100% {
     opacity: 0;
@@ -319,6 +337,12 @@ header > * {
   font-size: clamp(30.4px, 3.52vw, 57.6px);
   overflow-wrap: break-word;
   hyphens: auto;
+}
+.hy {
+  color: var(--y);
+}
+.hy.dim {
+  color: #d9b300;
 }
 #hero p.lead {
   max-width: 30ch;
@@ -561,8 +585,6 @@ header > * {
   position: sticky;
   bottom: 64px;
   z-index: 2;
-}
-#wcap {
   min-height: 3em;
   color: var(--w);
   font-size: 16px;
@@ -570,6 +592,22 @@ header > * {
 }
 #wcap span {
   color: var(--y);
+}
+/* низ works: тёмный градиент перекрывает «выглядывание» 3D соседней секции
+   при momentum-скролле (тачпад), когда fixed-canvas отстаёт на кадр */
+#works::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16vh;
+  background: linear-gradient(to top, var(--g) 0%, rgba(23, 22, 19, 0) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+.static #works::after {
+  display: none;
 }
 /* principles */
 #pr {
@@ -618,9 +656,45 @@ header > * {
   pointer-events: auto;
   margin-bottom: 24px;
 }
+.static #pr .ppcol {
+  display: block;
+}
 #pr .pp h3 {
   font-size: clamp(27.2px, 3.52vw, 51.2px);
   margin: 8px 0 14px;
+}
+/* колонка точек CUT03: точки стопкой + кнопка под ними */
+#pr .ppcol {
+  grid-area: 1/1;
+  display: grid;
+}
+/* кнопка Telegram: обычно в шапке; в CUT03 плавно «докидывается» под блоки точек (--dock 0…1 по скроллу) */
+header .hl {
+  opacity: calc(1 - var(--hlgone));
+  transform: translateY(calc(var(--hlgone) * -8px));
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+body:not(.in-cut03) header .hl {
+  pointer-events: auto;
+}
+#pr .ppcol > .cut03-hl {
+  display: inline-block;
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: start;
+  margin-top: 14px;
+  opacity: var(--dock);
+  transform: translateY(calc((1 - var(--dock)) * 10px));
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+body.in-cut03 #pr .ppcol > .cut03-hl {
+  pointer-events: auto;
 }
 #pr .intro {
   max-width: 640px;
@@ -1220,6 +1294,9 @@ footer .mono {
     pointer-events: auto;
     margin-bottom: 24px;
   }
+  #pr .ppcol {
+    display: block;
+  }
   .ed {
     transform: none;
   }
@@ -1369,7 +1446,7 @@ footer .mono {
 }
 /* вспышка-«протяжка» света слева направо вместо обычной вспышки склейки */
 #fl.wow {
-  background: linear-gradient(105deg, transparent 0 35%, rgba(255, 214, 10, 0) 38%, rgba(255, 236, 150, 0.95) 50%, rgba(255, 214, 10, 0) 62%, transparent 65%);
+  background: linear-gradient(105deg, transparent 0 35%, rgba(255, 214, 10, 0) 38%, rgba(255, 236, 150, 0.4) 50%, rgba(255, 214, 10, 0) 62%, transparent 65%);
   background-size: 300% 100%;
   background-position: 100% 0;
 }
@@ -1378,11 +1455,11 @@ footer .mono {
 }
 @keyframes flw {
   0% {
-    opacity: 1;
+    opacity: 0.6;
     background-position: 100% 0;
   }
   100% {
-    opacity: 1;
+    opacity: 0.6;
     background-position: 0% 0;
   }
 }

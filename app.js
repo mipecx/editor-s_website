@@ -16,7 +16,7 @@ import { DATA } from "./data.js";
 
     $("#hero").innerHTML =
       "<div><h1>" +
-      e(DATA.hero.title) +
+      e(DATA.hero.title).replace(e(DATA.name) + ".", '<span class="hy">' + e(DATA.name) + ".</span>") +
       '</h1><p class="lead">' +
       e(DATA.hero.lead) +
       '</p><a class="btn" href="' +
@@ -49,32 +49,67 @@ import { DATA } from "./data.js";
       "</span>" +
       '<div class="ln"></div><input type="range" min="0" max="100" value="50" aria-label="Сравнить: сырой и готовый" /></div>' +
       '<div class="pn"><h2 style="font-size: clamp(32px, 4vw, 56px)">' +
-      e(DATA.ba.title) +
+      e(DATA.ba.title).replace(/([^.]*\.)/, '<span class="hy">$1</span>') +
       "</h2><ul>" +
       DATA.ba.points.map((p) => "<li>" + e(p) + "</li>").join("") +
       "</ul></div>";
 
-    $("#works").innerHTML = '<div class="pn" style="align-self: flex-start"><h2>' + e(DATA.works.title) + '</h2><p class="mono" style="margin: 12px 0 0">' + e(DATA.works.note) + "</p></div>" + '<div class="pn" id="wcap" style="align-self: flex-start">' + e(DATA.works.hint) + '</div><div class="wl">' + DATA.works.items.map((w) => '<div class="' + (w.v ? "v" : "h") + '"><b>' + e(w.tag) + "</b>" + e(w.sub) + "</div>").join("") + '</div><div class="wk-mq" aria-hidden="true"><span>' + (e(DATA.works.marquee || "РАБОТЫ · WORKS") + " · ").repeat(4) + "</span></div>";
+    $("#works").innerHTML =
+      '<div class="pn" style="align-self: flex-start"><h2>' +
+      e(DATA.works.title) +
+      '</h2><p class="mono" style="margin: 12px 0 0">' +
+      e(DATA.works.note) +
+      "</p></div>" +
+      '<div class="pn" id="wcap" style="align-self: flex-start">' +
+      e(DATA.works.hint) +
+      "</div>" +
+      '<div class="wl">' +
+      DATA.works.items.map((w) => '<div class="' + (w.v ? "v" : "h") + '"><b>' + e(w.tag) + "</b>" + e(w.sub) + "</div>").join("") +
+      '</div><div class="wk-mq" aria-hidden="true"><span>' +
+      (e(DATA.works.marquee || "РАБОТЫ · WORKS") + " · ").repeat(4) +
+      "</span></div>";
 
     const ED = DATA.pr.editor,
-  fmt = (sec) => {
-    sec = Math.floor(sec);
-    const z = (n) => String(n).padStart(2, "0");
-    return z(Math.floor(sec / 3600)) + ":" + z(Math.floor((sec % 3600) / 60)) + ":" + z(sec % 60);
-  };
-$("#pr").innerHTML =
-  '<div class="pn intro"><h2>' + e(DATA.pr.title) + '</h2><p class="mono" style="margin: 14px 0 0">' + e(DATA.pr.note) + '</p></div><div class="stk" id="stk"><div class="sticky">' +
-  '<div class="ed" id="ed" role="group" aria-label="' + e(DATA.pr.screen) + '">' +
-  '<div class="ed-top mono"><span class="ed-dots"><i></i><i></i><i></i></span><span>' + e(DATA.pr.screen) + '</span><span id="edtc">' + fmt(0) + "</span></div>" +
-  '<div class="ed-pv" id="edpv" data-i="0"><span class="ed-a mono" id="eda"></span><b id="edv"></b><span class="ed-s" id="edt"></span></div>' +
-  '<div class="ed-bar"><button type="button" class="ed-b" id="edplay">' + e(ED.play) + '</button><button type="button" class="ed-b" id="edreset" disabled>' + e(ED.reset) + "</button></div>" +
-  '<div class="ed-ruler" id="edru"><span></span><div class="ed-ticks">' +
-  [0, 1, 2, 3, 4].map((i) => '<span style="left:' + i * 20 + '%">' + fmt(i * ED.total / 5).slice(3) + "</span>").join("") +
-  '</div></div><div class="ed-rows" id="edrows">' +
-  ED.tracks.map((t) => '<div class="ed-row"><span class="ed-l mono">' + e(t.name) + '</span><div class="ed-lane"></div></div>').join("") +
-  '<i class="ed-ph"></i></div><p class="mono ed-hint">' + e(ED.hint) + '</p><div class="ed-live" id="edlive" role="status" aria-live="polite"></div></div>' +
-  DATA.pr.points.map((p, i) => '<div class="pp' + (i ? "" : " on") + '"><div class="pn"><span class="mono">' + e(p.time) + "</span><h3>" + e(p.h) + "</h3><p>" + e(p.p) + "</p></div></div>").join("") +
-  "</div></div>";
+      fmt = (sec) => {
+        sec = Math.floor(sec);
+        const z = (n) => String(n).padStart(2, "0");
+        return z(Math.floor(sec / 3600)) + ":" + z(Math.floor((sec % 3600) / 60)) + ":" + z(sec % 60);
+      };
+    $("#pr").innerHTML =
+      '<div class="pn intro"><h2>' +
+      e(DATA.pr.title).replace("монтаж", '<span class="hy">монтаж</span>') +
+      '</h2><p class="mono" style="margin: 14px 0 0">' +
+      e(DATA.pr.note) +
+      '</p></div><div class="stk" id="stk"><div class="sticky">' +
+      '<div class="ed" id="ed" role="group" aria-label="' +
+      e(DATA.pr.screen) +
+      '">' +
+      '<div class="ed-top mono"><span class="ed-dots"><i></i><i></i><i></i></span><span>' +
+      e(DATA.pr.screen) +
+      '</span><span id="edtc">' +
+      fmt(0) +
+      "</span></div>" +
+      '<div class="ed-pv" id="edpv" data-i="0"><span class="ed-a mono" id="eda"></span><b id="edv"></b><span class="ed-s" id="edt"></span></div>' +
+      '<div class="ed-bar"><button type="button" class="ed-b" id="edplay">' +
+      e(ED.play) +
+      '</button><button type="button" class="ed-b" id="edreset" disabled>' +
+      e(ED.reset) +
+      "</button></div>" +
+      '<div class="ed-ruler" id="edru"><span></span><div class="ed-ticks">' +
+      [0, 1, 2, 3, 4].map((i) => '<span style="left:' + i * 20 + '%">' + fmt((i * ED.total) / 5).slice(3) + "</span>").join("") +
+      '</div></div><div class="ed-rows" id="edrows">' +
+      ED.tracks.map((t) => '<div class="ed-row"><span class="ed-l mono">' + e(t.name) + '</span><div class="ed-lane"></div></div>').join("") +
+      '<i class="ed-ph"></i></div><p class="mono ed-hint">' +
+      e(ED.hint) +
+      '</p><div class="ed-live" id="edlive" role="status" aria-live="polite"></div></div>' +
+      '<div class="ppcol">' +
+      DATA.pr.points.map((p, i) => '<div class="pp' + (i ? "" : " on") + '"><div class="pn"><span class="mono">' + e(p.time) + '</span><h3><span class="hy">' + e(p.h) + "</span></h3><p>" + e(p.p) + "</p></div></div>").join("") +
+      '<a class="hl cut03-hl" href="' +
+      tg +
+      '">' +
+      e(DATA.headerCta) +
+      "</a>" +
+      "</div></div></div>";
 
     $("#pause").innerHTML = "<p>" + DATA.pause.html + "</p>";
 
@@ -89,10 +124,10 @@ $("#pr").innerHTML =
         })
         .join("") +
       '</div><p class="pers">' +
-      e(DATA.formats.outro) +
+      e(DATA.formats.outro).replace("Беру и личные проекты", '<span class="hy">Беру и личные проекты</span>') +
       "</p>";
 
-    $("#proc").innerHTML = "<h2>" + e(DATA.proc.title) + '</h2><div class="pl" id="pl">' + DATA.proc.steps.map((s) => '<div class="st"><span class="mono">' + e(s.n) + "</span><h3>" + e(s.h) + "</h3><p>" + e(s.p) + "</p></div>").join("") + "</div>";
+    $("#proc").innerHTML = "<h2>" + e(DATA.proc.title).replace("работаем", '<span class="hy dim">работаем</span>') + '</h2><div class="pl" id="pl">' + DATA.proc.steps.map((s) => '<div class="st"><span class="mono">' + e(s.n) + "</span><h3>" + e(s.h) + "</h3><p>" + e(s.p) + "</p></div>").join("") + "</div>";
 
     $("#rev").innerHTML = "<h2>" + e(DATA.reviews.title) + '</h2><div class="rv">' + DATA.reviews.items.map((q) => '<div class="q"><div class="av">' + e(q.av) + "</div><div><p>" + e(q.text) + '</p><span class="mono">' + e(q.name) + ' · <a href="' + q.url + '">' + e(q.link) + "</a></span></div></div>").join("") + "</div>";
 
@@ -100,7 +135,7 @@ $("#pr").innerHTML =
 
     $("#contact").innerHTML =
       "<h2>" +
-      e(DATA.contact.title) +
+      e(DATA.contact.title).replace("Напишите.", '<span class="hy">Напишите.</span>') +
       '</h2><a class="btn big" href="' +
       tg +
       '">' +
@@ -139,6 +174,7 @@ $("#pr").innerHTML =
     my = 0;
   /* hero slot */
   const slot = $("#slot"),
+    skipBtn = $("#skip"),
     S = DATA.slot.frames;
   let st = 0,
     first = true;
@@ -146,6 +182,8 @@ $("#pr").innerHTML =
     st = (n + 3) % 3;
     slot.dataset.s = st;
     $("#cnt").textContent = st + 1 + " / 3";
+    /* «Пропустить вступление» активна, пока не дошли до последнего (3-го) слайда */
+    if (skipBtn) skipBtn.disabled = st === 2;
     const cap = $("#cap");
     const html = "<b>" + S[st][0] + ".</b> " + S[st][1];
     if (first) {
@@ -178,7 +216,7 @@ $("#pr").innerHTML =
       if (e.key === "ArrowLeft") setS(st - 1);
     }
   });
-  $("#skip").addEventListener("click", () => setS(2));
+  if (skipBtn) skipBtn.addEventListener("click", () => setS(2));
   slot.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -486,7 +524,7 @@ $("#pr").innerHTML =
     prog();
     wCheck();
     const r = pl.getBoundingClientRect();
-    pl.style.setProperty("--f", cl((innerHeight * 0.6 - r.top) / r.height, 0, 1));
+    pl.style.setProperty("--f", cl((innerHeight * 0.515 - r.top) / r.height, 0, 1));
   }
   addEventListener("scroll", onScroll, { passive: true });
   if (!rm && window.IntersectionObserver) {
@@ -504,34 +542,115 @@ $("#pr").innerHTML =
     );
     $$("section[data-cut]").forEach((s) => io.observe(s));
   }
-  /* Магнит к верху секций. SNAP — сила: доля высоты экрана, ближе которой дотягивает. */
+  /* док кнопки Telegram: обычно в шапке; в CUT03 плавно «докидывается» под блоки точек (--dock 0…1) */
+  const prSec = $("#pr"),
+    pauseSec = $("#pause");
+  const dockUpdate = () => {
+    if (!prSec) return;
+    const top = prSec.getBoundingClientRect().top,
+      enter = cl((-top - innerHeight * 0.2) / (innerHeight * 0.35), 0, 1);
+    let exit = 1;
+    if (pauseSec) exit = cl(pauseSec.getBoundingClientRect().top / (innerHeight * 0.5), 0, 1);
+    const d = Math.min(enter, exit),
+      gone = cl((innerHeight * 0.4 - top) / (innerHeight * 0.4), 0, 1),
+      hg = Math.min(gone, exit);
+    document.body.style.setProperty("--dock", d.toFixed(3));
+    document.body.style.setProperty("--hlgone", hg.toFixed(3));
+    document.body.classList.toggle("in-cut03", d > 0.5);
+  };
+  dockUpdate();
+  addEventListener("scroll", dockUpdate, { passive: true });
+  addEventListener("resize", dockUpdate);
+  /* Магнит к верху секций.
+     Принципы: срабатывает только когда прокрутка «осела» (нет колеса/пальца/инерции),
+     тянет в сторону движения, едет своей плавной кривой, а любое действие пользователя
+     (колесо, касание, клавиша) мгновенно его отменяет. SNAP — зона притяжения (доля экрана). */
   const snapSecs = $$("main > section"),
-    SNAP = 0.2;
-  let snapLock = false,
-    snapT = 0;
+    SNAP = 0.22;
+  let anim = 0,
+    snapT = 0,
+    touching = false,
+    lastY = scrollY,
+    dir = 0;
+  const ease3 = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  function cancelAnim() {
+    if (anim) {
+      cancelAnimationFrame(anim);
+      anim = 0;
+    }
+  }
+  /* общий плавный скролл: и для магнита, и для якорных ссылок */
+  function glideTo(top, ms) {
+    cancelAnim();
+    const y0 = scrollY,
+      dist = top - y0;
+    if (rm || Math.abs(dist) < 2) return scrollTo(0, top);
+    const dur = ms || cl(260 + Math.abs(dist) * 0.5, 320, 760),
+      t0 = performance.now();
+    (function step(now) {
+      const k = cl((now - t0) / dur, 0, 1);
+      scrollTo(0, y0 + dist * ease3(k));
+      anim = k < 1 ? requestAnimationFrame(step) : 0;
+    })(t0);
+  }
   function snapTo() {
-    if (snapLock || snapSecs.length < 2) return;
+    if (anim || touching || rm || snapSecs.length < 2) return;
     const y = scrollY,
-      lim = innerHeight * SNAP;
+      lim = innerHeight * SNAP,
+      max = document.documentElement.scrollHeight - innerHeight;
     let best = null,
       bd = Infinity;
     snapSecs.forEach((s) => {
-      const t = s.getBoundingClientRect().top + y,
-        d = Math.abs(t - y);
-      if (d < bd) ((bd = d), (best = t));
+      const t = Math.min(s.getBoundingClientRect().top + y, max),
+        d = t - y;
+      /* секция «впереди по ходу движения» притягивает сильнее, чем позади */
+      const w = dir && d * dir < 0 ? 1.6 : 1,
+        sd = Math.abs(d) * w;
+      if (sd < bd) ((bd = sd), (best = t));
     });
-    if (best != null && bd > 2 && bd < lim) {
-      snapLock = true;
-      scrollTo({ top: best, behavior: rm ? "auto" : "smooth" });
-      setTimeout(() => (snapLock = false), 800);
-    }
+    if (best != null && Math.abs(best - y) > 2 && bd < lim) glideTo(best);
   }
   function queueSnap() {
     clearTimeout(snapT);
-    snapT = setTimeout(snapTo, 130);
+    snapT = setTimeout(snapTo, 160);
   }
-  addEventListener("scroll", queueSnap, { passive: true });
-  if ("onscrollend" in window) addEventListener("scrollend", snapTo);
+  addEventListener(
+    "scroll",
+    () => {
+      const y = scrollY;
+      if (Math.abs(y - lastY) > 0.5) dir = y > lastY ? 1 : -1;
+      lastY = y;
+      if (!anim) queueSnap(); /* свой же скролл магнит не перезапускает */
+    },
+    { passive: true },
+  );
+  /* пользователь взял управление: магнит сразу отпускает */
+  const grab = () => {
+    cancelAnim();
+    clearTimeout(snapT);
+  };
+  addEventListener("wheel", grab, { passive: true });
+  addEventListener("keydown", grab);
+  addEventListener("mousedown", grab);
+  addEventListener(
+    "touchstart",
+    () => {
+      touching = true;
+      grab();
+    },
+    { passive: true },
+  );
+  addEventListener("touchend", () => ((touching = false), queueSnap()), { passive: true });
+  addEventListener("touchcancel", () => (touching = false), { passive: true });
+  /* якорные ссылки (логотип и т.п.) едут тем же плавным ходом, а не браузерным smooth */
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a || a.getAttribute("href").length < 2) return;
+    const el = document.getElementById(a.getAttribute("href").slice(1));
+    if (!el) return;
+    e.preventDefault();
+    glideTo(el.getBoundingClientRect().top + scrollY);
+  });
   addEventListener("resize", () => {
     ticks();
     onScroll();
@@ -588,7 +707,8 @@ $("#pr").innerHTML =
     const mY = mS(Y, { emissive: Y, emissiveIntensity: 0.4 }),
       mG = mS(0x2c2a25),
       mC = mS(0xb4ae9f),
-      mD = mS(G);
+      mD = mS(G),
+      mB = mS(0xf3eee4, { emissive: 0xf3eee4, emissiveIntensity: 0.15 });
     function tex(w, h, fn) {
       const c = document.createElement("canvas");
       c.width = w;
@@ -633,7 +753,7 @@ $("#pr").innerHTML =
     function frame(v, w, tag, sub, i) {
       const h = v ? (w * 16) / 9 : (w * 9) / 16,
         g = new T.Group();
-      const b = new T.Mesh(new T.BoxGeometry(w + 0.12, h + 0.12, 0.05), mD);
+      const b = new T.Mesh(new T.BoxGeometry(w + 0.05, h + 0.05, 0.05), mB);
       const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ map: ph(v, tag, sub, i) }));
       m.position.z = 0.03;
       const pb = new T.Mesh(new T.PlaneGeometry(w * 0.9, 0.06), new T.MeshBasicMaterial({ color: Y }));
@@ -837,10 +957,14 @@ $("#pr").innerHTML =
       baX = 4,
       wB = 1;
     function layout() {
-      asp = innerWidth / innerHeight;
+      /* размеры берём у самого canvas (CSS 100%), а не innerWidth/innerHeight:
+         в Safari они расходятся (тулбар/скроллбар) и scissor уезжает */
+      const cw = r.domElement.clientWidth || innerWidth,
+        ch = r.domElement.clientHeight || innerHeight;
+      asp = cw / ch;
       cam.aspect = asp;
       cam.updateProjectionMatrix();
-      r.setSize(innerWidth, innerHeight, false);
+      r.setSize(cw, ch, false);
       gH.position.z = zOf(E.hero);
       gB.position.z = zOf(E.ba);
       gW.position.z = zOf(E.works);
@@ -916,9 +1040,12 @@ $("#pr").innerHTML =
         }
         a = n = 0;
       }
-      const tz = -(scrollY + innerHeight / 2) * K + D,
-        f = 1 - Math.exp(-dt / 110);
-      camz = ease(camz, tz, f);
+      /* реальные размеры canvas (совпадают с CSS 100%), а не innerWidth/innerHeight — иначе в Safari scissor уезжает */
+      const cw = r.domElement.clientWidth || innerWidth,
+        ch = r.domElement.clientHeight || innerHeight;
+      const tz = -(scrollY + ch / 2) * K + D;
+      /* камеру по вертикали ведём без инерции — иначе 3D-блок отстаёт от скролла и у разграничителя секции виден разрыв */
+      camz = tz;
       cam.position.set(mx * 0.5, -my * 0.3, camz);
       cam.lookAt(mx * 0.3, -my * 0.2, camz - D);
       const t = now / 1000;
@@ -931,7 +1058,7 @@ $("#pr").innerHTML =
         m.rotation.y += 0.003 * u.s;
       });
       const qb = rect(E.ba),
-        pbb = cl((scrollY + innerHeight / 2 - qb.t) / qb.h, 0, 1),
+        pbb = cl((scrollY + ch / 2 - qb.t) / qb.h, 0, 1),
         sp = 0.5 + 0.5 * Math.sin(pbb * Math.PI),
         go = sm3(cl(pbb / 0.3, 0, 1)) * (1 - sm3(cl((pbb - 0.7) / 0.3, 0, 1)));
       fade(ga, go);
@@ -952,7 +1079,7 @@ $("#pr").innerHTML =
       edgeMat.opacity = bo;
       edges.forEach((m) => (m.position.y = m.userData.s * 2.3 * band.scale.y));
       /* вспышка света и пылевой взрыв */
-      glow.material.opacity = wOn ? 0.16 + 0.75 * burst : 0;
+      glow.material.opacity = wOn ? 0.1 + 0.3 * burst : 0;
       glow.scale.setScalar(1 + burst * 0.8);
       dust.material.opacity = wOn ? cl(wp * 3, 0, 1) * 0.8 : 0;
       dust.scale.setScalar(1 + (1 - eo) * 2.2);
@@ -962,7 +1089,7 @@ $("#pr").innerHTML =
       const thv = Math.atan(Math.tan((20 * Math.PI) / 180) * asp) * 0.9,
         phs = tot / 2 / R,
         lim = Math.max(0, phs - thv),
-        pp = cl((scrollY - q.t) / Math.max(1, q.h - innerHeight), 0, 1);
+        pp = cl((scrollY - q.t) / Math.max(1, q.h - ch), 0, 1);
       pry = ease(pry, (pp - 0.5) * 2 * lim, 0.1);
       piv.rotation.y = pry + 1.1 * (1 - eo); /* резкий поворот ленты, который гасится */
       piv.position.z = (camz - gW.position.z) / wB;
@@ -1010,14 +1137,15 @@ $("#pr").innerHTML =
       r.setScissorTest(false);
       r.clear();
       r.setScissorTest(true);
+      const cb = r.domElement.getBoundingClientRect();
       regs.forEach(([el, gs]) => {
         const b = el.getBoundingClientRect(),
-          t = Math.max(0, b.top),
-          bt = Math.min(innerHeight, b.bottom);
+          t = Math.max(0, b.top - cb.top),
+          bt = Math.min(ch, b.bottom - cb.top);
         if (bt <= t) return;
         const own = [].concat(gs);
         all.forEach((o, i) => (o.visible = own.includes(o) && v0[i]));
-        r.setScissor(0, innerHeight - bt, innerWidth, bt - t);
+        r.setScissor(0, ch - bt, cw, bt - t);
         r.clearDepth();
         const kick = el === E.works && wOn ? Math.pow(1 - wp, 2.5) : 0;
         cam.fov = 40 + 34 * kick; /* широкий угол → быстрый «наезд» на нормальный */
