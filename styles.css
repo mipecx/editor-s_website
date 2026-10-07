@@ -7,6 +7,8 @@
   --mut: #d9d3c5;
   --sans: "Onest", system-ui, "Segoe UI", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --dock: 0;
+  --hlgone: 0;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -152,7 +154,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px clamp(16px, 3vw, 40px);
+  padding: 14px clamp(28px, 6vw, 88px);
   pointer-events: none;
 }
 header > * {
@@ -276,20 +278,7 @@ header > * {
     opacity: 0;
   }
 }
-#fl.hard {
-  background: var(--y);
-}
-#fl.hard.on {
-  animation: flh 0.25s ease-out;
-}
-@keyframes flh {
-  0% {
-    opacity: 0.85;
-  }
-  100% {
-    opacity: 0;
-  }
-}
+
 #vg {
   position: fixed;
   inset: 0;
@@ -571,6 +560,22 @@ header > * {
 #wcap span {
   color: var(--y);
 }
+/* низ works: тёмный градиент перекрывает «выглядывание» 3D соседней секции
+   при momentum-скролле (тачпад), когда fixed-canvas отстаёт на кадр */
+#works::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16vh;
+  background: linear-gradient(to top, var(--g) 0%, rgba(23, 22, 19, 0) 100%);
+  z-index: -1;
+  pointer-events: none;
+}
+.static #works::after {
+  display: none;
+}
 /* principles */
 #pr {
   padding-bottom: 20vh;
@@ -618,10 +623,47 @@ header > * {
   pointer-events: auto;
   margin-bottom: 24px;
 }
+.static #pr .ppcol {
+  display: block;
+}
+.static .ed {
+  opacity: 1;
+  transform: none;
+}
 #pr .pp h3 {
   font-size: clamp(27.2px, 3.52vw, 51.2px);
   margin: 8px 0 14px;
 }
+/* колонка точек CUT03: точки стопкой + кнопка под ними */
+#pr .ppcol {
+  grid-area: 1/1;
+  display: grid;
+}
+/* кнопка Telegram: обычно в шапке; в CUT03 плавно «докидывается» под блоки точек (--dock 0…1 по скроллу) */
+header .hl {
+  opacity: calc(1 - var(--hlgone));
+  transform: translateY(calc(var(--hlgone) * -8px));
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+body:not(.in-cut03) header .hl {
+  pointer-events: auto;
+}
+#pr .ppcol > .cut03-hl {
+  display: inline-block;
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: start;
+  margin-top: 14px;
+  opacity: var(--dock);
+  transform: translateY(calc((1 - var(--dock)) * 10px));
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+body.in-cut03 #pr .ppcol > .cut03-hl {
+  pointer-events: auto;
+}
+
 #pr .intro {
   max-width: 640px;
   margin-bottom: 6vh;
@@ -633,6 +675,8 @@ header > * {
 }
 .ed {
   --lab: 40px;
+  --edy: -4vh;
+  --edr: 12vh;
   grid-area: 1/2;
   justify-self: end;
   width: min(100%, 780px);
@@ -644,14 +688,20 @@ header > * {
   background: #171613;
   -webkit-user-select: none;
   user-select: none;
-  /* наклон монитора */
-  transform: perspective(1600px) rotateY(-15deg) rotateX(1deg);
+  /* наклон монитора + чуть выше центра; при входе в CUT03 выезжает снизу вверх */
+  opacity: 0;
+  transform: perspective(1600px) rotateY(-15deg) rotateX(1deg) translateY(calc(var(--edy) + var(--edr)));
   transform-style: preserve-3d;
+  transition: opacity 0.6s ease-in, transform 0.6s ease-in;
   /* корпус-безель монитора */
   box-shadow:
     0 0 0 10px #23211d,
     0 0 0 12px #3a372f,
     0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.ed.ed-in {
+  opacity: 1;
+  transform: perspective(1600px) rotateY(-15deg) rotateX(1deg) translateY(var(--edy));
 }
 .ed.dragging,
 .ed.dragging * {
@@ -1214,6 +1264,9 @@ footer .mono {
     height: auto;
     display: block;
   }
+  #pr .ppcol {
+    display: block;
+  }
   #pr .pp {
     opacity: 1;
     transform: none;
@@ -1221,7 +1274,10 @@ footer .mono {
     margin-bottom: 24px;
   }
   .ed {
-    transform: none;
+    transform: translateY(calc(var(--edy) + var(--edr)));
+  }
+  .ed.ed-in {
+    transform: translateY(var(--edy));
   }
   .static .wl {
     grid-template-columns: repeat(2, 1fr);

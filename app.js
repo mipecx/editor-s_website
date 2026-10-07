@@ -57,24 +57,46 @@ import { DATA } from "./data.js";
     $("#works").innerHTML = '<div class="pn" style="align-self: flex-start"><h2>' + e(DATA.works.title) + '</h2><p class="mono" style="margin: 12px 0 0">' + e(DATA.works.note) + "</p></div>" + '<div class="pn" id="wcap" style="align-self: flex-start">' + e(DATA.works.hint) + '</div><div class="wl">' + DATA.works.items.map((w) => '<div class="' + (w.v ? "v" : "h") + '"><b>' + e(w.tag) + "</b>" + e(w.sub) + "</div>").join("") + "</div>";
 
     const ED = DATA.pr.editor,
-  fmt = (sec) => {
-    sec = Math.floor(sec);
-    const z = (n) => String(n).padStart(2, "0");
-    return z(Math.floor(sec / 3600)) + ":" + z(Math.floor((sec % 3600) / 60)) + ":" + z(sec % 60);
-  };
-$("#pr").innerHTML =
-  '<div class="pn intro"><h2>' + e(DATA.pr.title) + '</h2><p class="mono" style="margin: 14px 0 0">' + e(DATA.pr.note) + '</p></div><div class="stk" id="stk"><div class="sticky">' +
-  '<div class="ed" id="ed" role="group" aria-label="' + e(DATA.pr.screen) + '">' +
-  '<div class="ed-top mono"><span class="ed-dots"><i></i><i></i><i></i></span><span>' + e(DATA.pr.screen) + '</span><span id="edtc">' + fmt(0) + "</span></div>" +
-  '<div class="ed-pv" id="edpv" data-i="0"><span class="ed-a mono" id="eda"></span><b id="edv"></b><span class="ed-s" id="edt"></span></div>' +
-  '<div class="ed-bar"><button type="button" class="ed-b" id="edplay">' + e(ED.play) + '</button><button type="button" class="ed-b" id="edreset" disabled>' + e(ED.reset) + "</button></div>" +
-  '<div class="ed-ruler" id="edru"><span></span><div class="ed-ticks">' +
-  [0, 1, 2, 3, 4].map((i) => '<span style="left:' + i * 20 + '%">' + fmt(i * ED.total / 5).slice(3) + "</span>").join("") +
-  '</div></div><div class="ed-rows" id="edrows">' +
-  ED.tracks.map((t) => '<div class="ed-row"><span class="ed-l mono">' + e(t.name) + '</span><div class="ed-lane"></div></div>').join("") +
-  '<i class="ed-ph"></i></div><p class="mono ed-hint">' + e(ED.hint) + '</p><div class="ed-live" id="edlive" role="status" aria-live="polite"></div></div>' +
-  DATA.pr.points.map((p, i) => '<div class="pp' + (i ? "" : " on") + '"><div class="pn"><span class="mono">' + e(p.time) + "</span><h3>" + e(p.h) + "</h3><p>" + e(p.p) + "</p></div></div>").join("") +
-  "</div></div>";
+      fmt = (sec) => {
+        sec = Math.floor(sec);
+        const z = (n) => String(n).padStart(2, "0");
+        return z(Math.floor(sec / 3600)) + ":" + z(Math.floor((sec % 3600) / 60)) + ":" + z(sec % 60);
+      };
+    $("#pr").innerHTML =
+      '<div class="pn intro"><h2>' +
+      e(DATA.pr.title) +
+      '</h2><p class="mono" style="margin: 14px 0 0">' +
+      e(DATA.pr.note) +
+      '</p></div><div class="stk" id="stk"><div class="sticky">' +
+      '<div class="ed" id="ed" role="group" aria-label="' +
+      e(DATA.pr.screen) +
+      '">' +
+      '<div class="ed-top mono"><span class="ed-dots"><i></i><i></i><i></i></span><span>' +
+      e(DATA.pr.screen) +
+      '</span><span id="edtc">' +
+      fmt(0) +
+      "</span></div>" +
+      '<div class="ed-pv" id="edpv" data-i="0"><span class="ed-a mono" id="eda"></span><b id="edv"></b><span class="ed-s" id="edt"></span></div>' +
+      '<div class="ed-bar"><button type="button" class="ed-b" id="edplay">' +
+      e(ED.play) +
+      '</button><button type="button" class="ed-b" id="edreset" disabled>' +
+      e(ED.reset) +
+      "</button></div>" +
+      '<div class="ed-ruler" id="edru"><span></span><div class="ed-ticks">' +
+      [0, 1, 2, 3, 4].map((i) => '<span style="left:' + i * 20 + '%">' + fmt((i * ED.total) / 5).slice(3) + "</span>").join("") +
+      '</div></div><div class="ed-rows" id="edrows">' +
+      ED.tracks.map((t) => '<div class="ed-row"><span class="ed-l mono">' + e(t.name) + '</span><div class="ed-lane"></div></div>').join("") +
+      '<i class="ed-ph"></i></div><p class="mono ed-hint">' +
+      e(ED.hint) +
+      '</p><div class="ed-live" id="edlive" role="status" aria-live="polite"></div></div>' +
+      '<div class="ppcol">' +
+      DATA.pr.points.map((p, i) => '<div class="pp' + (i ? "" : " on") + '"><div class="pn"><span class="mono">' + e(p.time) + "</span><h3>" + e(p.h) + "</h3><p>" + e(p.p) + "</p></div></div>").join("") +
+      '<a class="hl cut03-hl" href="' +
+      tg +
+      '">' +
+      e(DATA.headerCta) +
+      "</a>" +
+      "</div></div></div>";
 
     $("#pause").innerHTML = "<p>" + DATA.pause.html + "</p>";
 
@@ -458,26 +480,80 @@ $("#pr").innerHTML =
     pl.style.setProperty("--f", cl((innerHeight * 0.6 - r.top) / r.height, 0, 1));
   }
   addEventListener("scroll", onScroll, { passive: true });
-  if (!rm && window.IntersectionObserver) {
-    const io = new IntersectionObserver(
-      (es) =>
-        es.forEach((e) => {
-          if (e.isIntersecting && scrollY > 50) {
-            fl.className = "";
-            fl.classList.toggle("hard", e.target.id === "pause");
-            void fl.offsetWidth;
-            fl.classList.add("on");
-          }
-        }),
-      { rootMargin: "0px 0px -90% 0px" },
-    );
-    $$("section[data-cut]").forEach((s) => io.observe(s));
-  }
+  /* активная секция: блик + док кнопки Telegram (в CUT03 — под блоками, иначе — в шапке) */
+  const cutSecs = $$("section[data-cut]"),
+    prSec = $("#pr"),
+    pauseSec = $("#pause"),
+    edEl = $("#ed");
+  let curCut = null;
+  const cutFlash = () => {
+    let act = null;
+    if (scrollY > 50)
+      cutSecs.forEach((s) => {
+        if (s.getBoundingClientRect().top <= innerHeight * 0.1) act = s;
+      });
+    /* плавный док кнопки Telegram: --dock 0…1; появляется поздно, возвращается только на CUT04 */
+    let d = 0,
+      hg = 0;
+    if (prSec) {
+      const top = prSec.getBoundingClientRect().top,
+        enter = cl((-top - innerHeight * 0.2) / (innerHeight * 0.35), 0, 1);
+      let exit = 1;
+      if (pauseSec) exit = cl(pauseSec.getBoundingClientRect().top / (innerHeight * 0.5), 0, 1);
+      d = Math.min(enter, exit);
+      /* шапка: кнопка уходит уже при входе в CUT03, возвращается на CUT04 */
+      const gone = cl((innerHeight * 0.4 - top) / (innerHeight * 0.4), 0, 1);
+      hg = Math.min(gone, exit);
+      document.body.style.setProperty("--dock", d.toFixed(3));
+      document.body.style.setProperty("--hlgone", hg.toFixed(3));
+    }
+    document.body.classList.toggle("in-cut03", d > 0.5);
+    /* окно SEQUENCE проявляется, когда липкий блок встал по середине (дошёл до верха).
+       Гистерезис, чтобы не моргало на границе: включаем на 0, выключаем только выше 40% экрана */
+    if (edEl) {
+      const stkTop = stk.getBoundingClientRect().top;
+      if (stkTop <= innerHeight * 0.55) edEl.classList.add("ed-in");
+      else if (stkTop > innerHeight * 0.9) edEl.classList.remove("ed-in");
+    }
+    if (act && act !== curCut) {
+      curCut = act;
+      if (!rm) {
+        fl.className = "";
+        void fl.offsetWidth;
+        fl.classList.add("on");
+      }
+    }
+  };
+  cutFlash();
+  addEventListener("scroll", cutFlash, { passive: true });
+  addEventListener("resize", cutFlash);
   /* Магнит к верху секций. SNAP — сила: доля высоты экрана, ближе которой дотягивает. */
   const snapSecs = $$("main > section"),
-    SNAP = 0.2;
+    SNAP = 0;
   let snapLock = false,
-    snapT = 0;
+    snapT = 0,
+    snapRAF = 0;
+  const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  /* Плавный дотяг с контролируемой скоростью: dur = 500 + |dist|*4 (макс 1400мс) — больше = медленнее. */
+  function glideTo(to) {
+    cancelAnimationFrame(snapRAF);
+    if (rm) {
+      scrollTo(0, to);
+      return;
+    }
+    const from = scrollY,
+      dist = to - from,
+      dur = Math.min(1400, 500 + Math.abs(dist) * 1);
+    let t0 = 0;
+    const step = (now) => {
+      if (!t0) t0 = now;
+      const p = Math.min(1, (now - t0) / dur);
+      scrollTo(0, from + dist * easeInOut(p));
+      if (p < 1) snapRAF = requestAnimationFrame(step);
+    };
+    snapRAF = requestAnimationFrame(step);
+    return dur;
+  }
   function snapTo() {
     if (snapLock || snapSecs.length < 2) return;
     const y = scrollY,
@@ -491,8 +567,8 @@ $("#pr").innerHTML =
     });
     if (best != null && bd > 2 && bd < lim) {
       snapLock = true;
-      scrollTo({ top: best, behavior: rm ? "auto" : "smooth" });
-      setTimeout(() => (snapLock = false), 800);
+      const dur = glideTo(best) || 0;
+      setTimeout(() => (snapLock = false), dur + 200);
     }
   }
   function queueSnap() {
@@ -557,7 +633,8 @@ $("#pr").innerHTML =
     const mY = mS(Y, { emissive: Y, emissiveIntensity: 0.4 }),
       mG = mS(0x2c2a25),
       mC = mS(0xb4ae9f),
-      mD = mS(G);
+      mD = mS(G),
+      mB = mS(0xf3eee4, { emissive: 0xf3eee4, emissiveIntensity: 0.15 });
     function tex(w, h, fn) {
       const c = document.createElement("canvas");
       c.width = w;
@@ -602,7 +679,7 @@ $("#pr").innerHTML =
     function frame(v, w, tag, sub, i) {
       const h = v ? (w * 16) / 9 : (w * 9) / 16,
         g = new T.Group();
-      const b = new T.Mesh(new T.BoxGeometry(w + 0.12, h + 0.12, 0.05), mD);
+      const b = new T.Mesh(new T.BoxGeometry(w + 0.05, h + 0.05, 0.05), mB);
       const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ map: ph(v, tag, sub, i) }));
       m.position.z = 0.03;
       const pb = new T.Mesh(new T.PlaneGeometry(w * 0.9, 0.06), new T.MeshBasicMaterial({ color: Y }));
@@ -654,6 +731,8 @@ $("#pr").innerHTML =
     const R = 9,
       piv = new T.Group();
     gW.add(piv);
+    /* тёмный задник вокруг камеры: зона works всегда непрозрачна и перекрывает 3D-соседа при утечке scissor */
+    piv.add(new T.Mesh(new T.BoxGeometry(70, 70, 70), new T.MeshBasicMaterial({ color: 0x171613, side: T.BackSide })));
     const bt = tex(512, 256, (x, w, h) => {
       x.fillStyle = "#14130f";
       x.fillRect(0, 0, w, h);
@@ -665,7 +744,7 @@ $("#pr").innerHTML =
     });
     bt.wrapS = T.RepeatWrapping;
     bt.repeat.set(40, 1);
-    const band = new T.Mesh(new T.CylinderGeometry(R + 0.06, R + 0.06, 4.6, 96, 1, true, Math.PI - 2.2, 4.4), new T.MeshBasicMaterial({ map: bt, side: T.DoubleSide }));
+    const band = new T.Mesh(new T.CylinderGeometry(R + 0.06, R + 0.06, 8, 96, 1, true, Math.PI - 2.2, 4.4), new T.MeshBasicMaterial({ map: bt, side: T.DoubleSide }));
     piv.add(band);
     const WS = 0.43,
       WG = 0.22;
@@ -685,20 +764,44 @@ $("#pr").innerHTML =
       fr.push(f);
     });
     band.material.transparent = true;
-    /* timeline tunnel */
+    /* timeline tunnel: детализация дорожек — текстура клипов + боковые канты */
+    const clipTex = tex(256, 64, (x, w, h) => {
+      x.fillStyle = "#c9c9c9";
+      x.fillRect(0, 0, w, h);
+      x.fillStyle = "#6f6f6f";
+      x.fillRect(0, 0, w, 6);
+      x.fillRect(0, h - 6, w, 6);
+      x.fillStyle = "#ffffff";
+      x.fillRect(0, 6, w, 3);
+      x.fillStyle = "#8a8a8a";
+      for (let i = 1; i < 12; i++) x.fillRect((i * w) / 12, 14, 2, h - 28);
+      x.fillStyle = "#f2f2f2";
+      for (let i = 0; i < 12; i++) x.fillRect((i * w) / 12 + 5, h / 2 - 4, 14, 8);
+    });
+    const clipMats = [mY, mC, mG].map((m) => {
+      const c = m.clone();
+      c.map = clipTex;
+      return c;
+    });
     const bricks = [],
       STRETCH = 0.076; /* до 2% от высоты тоннеля: верхние тянутся вниз, нижние вверх */
     [-1.9, 1.9].forEach((y) =>
-      [-4.2, -2.6, -1, 0.6, 2.2, 3.8].forEach((x, li) => {
+      [-4.2, -2.6, -1, 0.6, 2.2, 3.8].forEach((x) => {
+        const dir = y > 0 ? -1 : 1;
         const lane = new T.Mesh(new T.BoxGeometry(0.8, 0.05, 1), mD);
         lane.position.set(x, y, 0);
         gT.add(lane);
-        for (let k = 0, z = -0.5; z < 0.5 && k < 30; k++) {
-          const l = 0.025 + Math.random() * 0.07,
+        /* боковые канты дорожки */
+        [-0.41, 0.41].forEach((ox) => {
+          const e = new T.Mesh(new T.BoxGeometry(0.02, 0.08, 1), mC);
+          e.position.set(x + ox, y, 0);
+          gT.add(e);
+        });
+        for (let k = 0, z = -0.5; z < 0.5 && k < 34; k++) {
+          const l = 0.02 + Math.random() * 0.06,
             m = Math.random(),
-            mt = m < 0.35 ? mY : m < 0.65 ? mC : mG,
-            dir = y > 0 ? -1 : 1;
-          const b = new T.Mesh(new T.BoxGeometry(0.7, 0.34, l * 0.92), mt);
+            mt = clipMats[m < 0.35 ? 0 : m < 0.65 ? 1 : 2];
+          const b = new T.Mesh(new T.BoxGeometry(0.72, 0.34, l * 0.9), mt);
           b.position.set(x, y + dir * 0.2, z + l / 2);
           b.userData.o = k % 2;
           b.userData.dir = dir;
@@ -707,7 +810,7 @@ $("#pr").innerHTML =
           b.userData.sp = 0.6 + Math.random() * 1.2;
           gT.add(b);
           bricks.push(b);
-          z += l + 0.01 + Math.random() * 0.03;
+          z += l + 0.008 + Math.random() * 0.025;
         }
       }),
     );
@@ -760,10 +863,14 @@ $("#pr").innerHTML =
       baX = 4,
       wB = 1;
     function layout() {
-      asp = innerWidth / innerHeight;
+      /* размеры берём у самого canvas (CSS 100%), а не innerWidth/innerHeight:
+         в Safari они расходятся (тулбар/скроллбар) и scissor уезжает */
+      const cw = r.domElement.clientWidth || innerWidth,
+        ch = r.domElement.clientHeight || innerHeight;
+      asp = cw / ch;
       cam.aspect = asp;
       cam.updateProjectionMatrix();
-      r.setSize(innerWidth, innerHeight, false);
+      r.setSize(cw, ch, false);
       gH.position.z = zOf(E.hero);
       gB.position.z = zOf(E.ba);
       gW.position.z = zOf(E.works);
@@ -838,9 +945,12 @@ $("#pr").innerHTML =
         }
         a = n = 0;
       }
-      const tz = -(scrollY + innerHeight / 2) * K + D,
-        f = 1 - Math.exp(-dt / 110);
-      camz = ease(camz, tz, f);
+      /* реальные размеры canvas (совпадают с CSS 100%), а не innerWidth/innerHeight — иначе в Safari scissor уезжает */
+      const cw = r.domElement.clientWidth || innerWidth,
+        ch = r.domElement.clientHeight || innerHeight;
+      const tz = -(scrollY + ch / 2) * K + D;
+      /* камеру по вертикали ведём без инерции — иначе 3D-блок отстаёт от скролла и у разграничителя секции виден разрыв */
+      camz = tz;
       cam.position.set(mx * 0.5, -my * 0.3, camz);
       cam.lookAt(mx * 0.3, -my * 0.2, camz - D);
       const t = now / 1000;
@@ -853,7 +963,7 @@ $("#pr").innerHTML =
         m.rotation.y += 0.003 * u.s;
       });
       const qb = rect(E.ba),
-        pbb = cl((scrollY + innerHeight / 2 - qb.t) / qb.h, 0, 1),
+        pbb = cl((scrollY + ch / 2 - qb.t) / qb.h, 0, 1),
         sp = 0.5 + 0.5 * Math.sin(pbb * Math.PI),
         go = sm3(cl(pbb / 0.3, 0, 1)) * (1 - sm3(cl((pbb - 0.7) / 0.3, 0, 1)));
       fade(ga, go);
@@ -862,13 +972,18 @@ $("#pr").innerHTML =
       gb.position.set(baX * sp, Math.cos(t * 0.6) * 0.1, -1.5 - (1 - sp) * 2);
       /* works */
       const q = rect(E.works),
-        e0 = cl((scrollY + innerHeight - q.t) / (innerHeight * 0.9), 0, 1),
+        e0 = cl((scrollY + ch - q.t) / (ch * 0.9), 0, 1),
         ap = sm3(e0);
       band.material.opacity = ap;
       fr.forEach((f) => fade(f, ap));
       gW.visible = ap > 0.01;
       gW.scale.setScalar(wB * (0.86 + 0.14 * ap));
-      const pt = cl((scrollY + innerHeight / 2 - q.t) / q.h, 0, 1);
+      /* кадры ленты ведём за видимым центром секции works, чтобы scissor не срезал их у границ */
+      const wt = q.t - scrollY,
+        wb2 = q.t + q.h - scrollY,
+        vc = (Math.max(0, wt) + Math.min(ch, wb2)) / 2;
+      gW.position.y = ((ch / 2 - vc) * R * Math.tan((20 * Math.PI) / 180)) / (ch / 2);
+      const pt = cl((scrollY + ch / 2 - q.t) / q.h, 0, 1);
       const thv = Math.atan(Math.tan((20 * Math.PI) / 180) * asp) * 0.9,
         phs = tot / 2 / R,
         lim = Math.max(0, phs - thv),
@@ -907,21 +1022,22 @@ $("#pr").innerHTML =
         regs = [
           [E.hero, gH],
           [E.ba, gB],
-          [E.works, gW],
           [E.pr, [gT, mon]],
+          [E.works, gW],
         ],
         v0 = all.map((o) => o.visible);
       r.setScissorTest(false);
       r.clear();
       r.setScissorTest(true);
+      const cb = r.domElement.getBoundingClientRect();
       regs.forEach(([el, gs]) => {
         const b = el.getBoundingClientRect(),
-          t = Math.max(0, b.top),
-          bt = Math.min(innerHeight, b.bottom);
+          t = Math.max(0, b.top - cb.top),
+          bt = Math.min(ch, b.bottom - cb.top);
         if (bt <= t) return;
         const own = [].concat(gs);
         all.forEach((o, i) => (o.visible = own.includes(o) && v0[i]));
-        r.setScissor(0, innerHeight - bt, innerWidth, bt - t);
+        r.setScissor(0, ch - bt, cw, bt - t);
         r.clearDepth();
         r.render(sc, cam);
       });
