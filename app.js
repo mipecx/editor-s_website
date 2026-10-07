@@ -481,6 +481,8 @@ import { DATA } from "./data.js";
   lb.setAttribute("aria-hidden", "true");
   lb.innerHTML = "<i></i><i></i>";
   document.body.appendChild(lb);
+  const wTitle = wk.querySelector(":scope > .pn:first-child"),
+    wCap = wk.querySelector("#wcap");
   let wOn = false,
     wT0 = 0;
   const WDUR = 2000; /* длительность вступления, мс */
@@ -523,6 +525,12 @@ import { DATA } from "./data.js";
     fill.style.width = phd.style.left = p * 100 + "%";
     prog();
     wCheck();
+    /* CUT 02: когда верхний блок «Работы» заезжает на нижнюю подпись, подпись плавно исчезает */
+    if (wCap && wTitle) {
+      const a = wTitle.getBoundingClientRect(),
+        c = wCap.getBoundingClientRect();
+      wCap.classList.toggle("under", a.bottom > c.top + 4 && a.top < c.bottom);
+    }
     const r = pl.getBoundingClientRect();
     pl.style.setProperty("--f", cl((innerHeight * 0.515 - r.top) / r.height, 0, 1));
   }
@@ -1112,7 +1120,7 @@ import { DATA } from "./data.js";
         fade(g, cl(li * 5, 0, 1));
         g.position.set(rr * Math.sin(ph), 0, -rr * Math.cos(ph));
         g.rotation.set((1 - kk) * 0.4, -ph, (1 - kk) * (i % 2 ? 0.8 : -0.8));
-        g.scale.setScalar((0.35 + 0.65 * kk) * (1 + 0.12 * u.e));
+        g.scale.setScalar((0.35 + 0.65 * kk) * (1 + 0.3 * u.e));
         u.pb.visible = u.e > 0.3;
         u.pb.scale.x = 0.05 + ((t * 0.25) % 1) * 0.95;
         u.pb.position.x = -u.w * 0.45 + (u.w * 0.9 * u.pb.scale.x) / 2;

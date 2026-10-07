@@ -9,6 +9,73 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div id="ld" aria-hidden="true">
+      <div class="ld-half top"><span class="ld-cut mono">CUT 00 · ЗАГРУЗКА</span></div>
+      <div class="ld-half bot"></div>
+      <div class="ld-core">
+        <div class="ld-numw"><div class="ld-num" id="ldn">000</div><div class="ld-num ld-g a"></div><div class="ld-num ld-g b"></div></div>
+        <div class="ld-tc mono"><span id="ldt">00:00:00</span><span id="lds">Синхронизирую звук…</span></div>
+        <div class="ld-track"><i id="ldf"></i></div>
+      </div>
+      <div class="ld-line"></div>
+    </div>
+    <script>
+      /* экран загрузки: прогресс настоящий (шрифты → load), минимум 1.5с, максимум 6с, повторно в сессии не показывается */
+      (function () {
+        var L = document.getElementById("ld"),
+          root = document.documentElement,
+          T = [[0, "Синхронизирую звук…"], [0.35, "Подбираю кадры…"], [0.7, "Убираю лишние паузы…"], [0.93, "Склеиваю…"]],
+          seen = false,
+          done = false,
+          t = 0.08,
+          p = 0,
+          t0 = performance.now(),
+          n = document.getElementById("ldn"),
+          tc = document.getElementById("ldt"),
+          st = document.getElementById("lds"),
+          fl = document.getElementById("ldf"),
+          last = "";
+        try { seen = sessionStorage.getItem("ld") === "1"; } catch (e) {}
+        if (seen) { L.remove(); root.classList.add("hero-in"); return; }
+        root.classList.add("ld-on");
+        function up(v) { t = Math.max(t, v); }
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { up(0.55); });
+        else up(0.55);
+        if (document.readyState === "complete") up(1);
+        else addEventListener("load", function () { up(1); });
+        setTimeout(function () { up(1); t0 -= 2000; }, 6000);
+        function pad(x, k) { return String(x).padStart(k, "0"); }
+        function finish() {
+          if (done) return;
+          done = true;
+          try { sessionStorage.setItem("ld", "1"); } catch (e) {}
+          var gs = L.querySelectorAll(".ld-g"), k = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 460;
+          for (var i = 0; i < gs.length; i++) gs[i].textContent = n.textContent;
+          if (k) L.classList.add("gl");
+          setTimeout(function () {
+            L.classList.add("go");
+            setTimeout(function () { root.classList.remove("ld-on"); root.classList.add("hero-in"); }, 750);
+            setTimeout(function () { L.remove(); }, 1800);
+          }, k);
+        }
+        L.addEventListener("click", function () { t = 1; t0 -= 3000; });
+        (function tick(now) {
+          if (done) return;
+          var cap = Math.min(1, (now - t0) / 1500);
+          p = Math.min(cap, p + (t - p) * 0.07 + 0.002, t);
+          var v = Math.min(100, Math.round(p * 100)),
+            f = Math.floor(p * 90);
+          n.textContent = pad(v, 3);
+          L.style.setProperty("--p", v + "%");
+          fl.style.transform = "scaleX(" + p + ")";
+          tc.textContent = "00:" + pad(Math.floor(f / 30), 2) + ":" + pad(f % 30, 2);
+          for (var i = 0; i < T.length; i++) if (p >= T[i][0]) last = T[i][1];
+          if (st.textContent !== last) st.textContent = last;
+          if (p >= 0.999 && t >= 1) return finish();
+          requestAnimationFrame(tick);
+        })(performance.now());
+      })();
+    </script>
     <header></header>
     <canvas id="gl" aria-hidden="true"></canvas>
     <div id="vg"></div>

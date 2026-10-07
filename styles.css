@@ -593,6 +593,11 @@ header > * {
 #wcap span {
   color: var(--y);
 }
+/* верхний блок заехал на подпись: подпись гаснет */
+#works > #wcap.under {
+  opacity: 0;
+  pointer-events: none;
+}
 /* низ works: тёмный градиент перекрывает «выглядывание» 3D соседней секции
    при momentum-скролле (тачпад), когда fixed-canvas отстаёт на кадр */
 #works::after {
@@ -1424,6 +1429,9 @@ footer .mono {
   transform: scaleX(1);
   transition: transform 0.9s cubic-bezier(0.7, 0, 0.2, 1) 0.7s;
 }
+#wcap {
+  transition: opacity 0.25s ease;
+}
 @media (prefers-reduced-motion: no-preference) {
   #works > .pn {
     transition:
@@ -1432,6 +1440,10 @@ footer .mono {
   }
   #works > #wcap {
     transition-delay: 0.9s;
+  }
+  #works > #wcap.under {
+    transition-delay: 0s;
+    transition-duration: 0.25s;
   }
   #works:not(.in) > .pn {
     opacity: 0;
@@ -1499,4 +1511,242 @@ footer .mono {
   100% {
     height: 0;
   }
+}
+
+/* ===== экран загрузки: «склейка» ===== */
+html.ld-on,
+html.ld-on body {
+  overflow: hidden;
+}
+#ld {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  cursor: progress;
+  --p: 0%;
+}
+.ld-half {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50.5%;
+  background: var(--g);
+  transition: transform 0.9s cubic-bezier(0.77, 0, 0.18, 1) 0.7s;
+}
+.ld-half.top {
+  top: 0;
+}
+.ld-half.bot {
+  bottom: 0;
+}
+.ld-cut {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  padding: 0 clamp(20px, 6vw, 96px);
+  background: var(--y);
+  color: var(--ink);
+  font: 700 9.6px/25px var(--mono);
+  background-image: repeating-linear-gradient(90deg, transparent 0 22px, rgba(0, 0, 0, 0.18) 22px 24px);
+}
+.ld-core {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 0 clamp(20px, 6vw, 96px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.5s cubic-bezier(0.5, 0, 0.2, 1);
+}
+.ld-num {
+  font: 800 clamp(130px, 28vw, 380px) / 0.85 var(--sans);
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(243, 238, 228, 0.3);
+  background: linear-gradient(to top, var(--y) var(--p), transparent var(--p));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.ld-tc {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(560px, 100%);
+  color: var(--mut);
+}
+.ld-tc span:first-child {
+  color: var(--y);
+}
+.ld-track {
+  position: relative;
+  width: min(560px, 100%);
+  height: 10px;
+  background: repeating-linear-gradient(90deg, rgba(243, 238, 228, 0.22) 0 2px, transparent 2px calc(100% / 9));
+  border-bottom: 2px solid rgba(243, 238, 228, 0.2);
+}
+.ld-track i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--y);
+  transform-origin: left;
+  transform: scaleX(0);
+}
+.ld-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--w);
+  box-shadow: 0 0 18px rgba(255, 214, 10, 0.55);
+  transform: scaleX(0);
+  opacity: 0;
+}
+#ld.go {
+  cursor: default;
+  pointer-events: none;
+}
+#ld.go .ld-core {
+  opacity: 0;
+  transform: scale(1.12);
+}
+#ld.go .ld-line {
+  animation: ldl 0.7s cubic-bezier(0.7, 0, 0.2, 1) 0.2s both;
+}
+@keyframes ldl {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  55% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+#ld.go .ld-half.top {
+  transform: translateY(-101%);
+}
+#ld.go .ld-half.bot {
+  transform: translateY(101%);
+}
+/* вход hero после склейки */
+#hero h1,
+#hero p.lead,
+#hero .btn,
+#hero .slotw {
+  transition:
+    opacity 0.9s ease,
+    transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#hero p.lead {
+  transition-delay: 0.14s;
+}
+#hero .btn {
+  transition-delay: 0.26s;
+}
+#hero .slotw {
+  transition-delay: 0.18s;
+}
+.ld-on #hero h1,
+.ld-on #hero p.lead,
+.ld-on #hero .btn {
+  opacity: 0;
+  transform: translateY(34px);
+}
+.ld-on #hero .slotw {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  #ld.go {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  #ld.go .ld-half,
+  #ld.go .ld-core {
+    transform: none;
+  }
+  #ld.go .ld-line {
+    animation: none;
+  }
+  .ld-on #hero h1,
+  .ld-on #hero p.lead,
+  .ld-on #hero .btn {
+    transform: none;
+  }
+}
+
+/* глитч-срез цифр на 100%: две цветные копии режутся полосами и сдвигаются */
+.ld-numw {
+  position: relative;
+  white-space: nowrap;
+}
+.ld-g {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  background: none;
+  -webkit-text-stroke: 0;
+}
+.ld-g.a {
+  color: var(--y);
+}
+.ld-g.b {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--w);
+}
+#ld.gl .ld-g {
+  opacity: 1;
+}
+#ld.gl .ld-g.a {
+  animation: ldga 0.46s steps(1) both;
+}
+#ld.gl .ld-g.b {
+  animation: ldgb 0.46s steps(1) both;
+}
+#ld.gl .ld-num:first-child {
+  animation: ldjit 0.46s steps(1) both;
+}
+@keyframes ldga {
+  0% { clip-path: inset(12% 0 70% 0); transform: translateX(-26px); }
+  16% { clip-path: inset(58% 0 22% 0); transform: translateX(30px); }
+  32% { clip-path: inset(32% 0 50% 0); transform: translateX(-14px); }
+  48% { clip-path: inset(78% 0 4% 0); transform: translateX(22px); }
+  64% { clip-path: inset(0 0 88% 0); transform: translateX(-34px); }
+  80% { clip-path: inset(44% 0 38% 0); transform: translateX(10px); }
+  100% { clip-path: inset(0 0 100% 0); transform: none; }
+}
+@keyframes ldgb {
+  0% { clip-path: inset(66% 0 16% 0); transform: translateX(24px); }
+  16% { clip-path: inset(8% 0 74% 0); transform: translateX(-30px); }
+  32% { clip-path: inset(48% 0 34% 0); transform: translateX(18px); }
+  48% { clip-path: inset(22% 0 62% 0); transform: translateX(-20px); }
+  64% { clip-path: inset(84% 0 0 0); transform: translateX(32px); }
+  80% { clip-path: inset(36% 0 46% 0); transform: translateX(-8px); }
+  100% { clip-path: inset(0 0 100% 0); transform: none; }
+}
+@keyframes ldjit {
+  0% { transform: translateX(6px); }
+  25% { transform: translateX(-8px) skewX(-4deg); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-3px) skewX(3deg); }
+  100% { transform: none; }
 }
