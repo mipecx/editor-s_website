@@ -3,7 +3,9 @@ import { DATA } from "./data.js";
 (function () {
   const $ = (s) => document.querySelector(s),
     $$ = (s) => [...document.querySelectorAll(s)],
-    cl = (v, a, b) => Math.max(a, Math.min(b, v));
+    cl = (v, a, b) => Math.max(a, Math.min(b, v)),
+    /* «телефон»: тот же запрос, что в styles.css (≤820px, а также телефон в горизонтальном положении) */
+    WMQ = matchMedia("(max-width: 820px), (hover: none) and (pointer: coarse) and (max-height: 500px)");
 
   /* Контент и вёрстка секций берутся из глобального DATA (см. data.js). */
   /* Рендер разметки из DATA (секции в index пустые). */
@@ -57,15 +59,21 @@ import { DATA } from "./data.js";
     $("#works").innerHTML =
       '<div class="pn" style="align-self: flex-start"><h2>' +
       e(DATA.works.title) +
-      '</h2><p class="mono" style="margin: 12px 0 0">' +
+      '</h2><p class="mono" style="margin: 12px 0 0"><span class="wn-d">' +
       e(DATA.works.note) +
-      "</p></div>" +
+      '</span><span class="wn-t">' +
+      e(DATA.works.noteTouch || DATA.works.note) +
+      "</span></p></div>" +
       '<div class="pn" id="wcap" style="align-self: flex-start">' +
       e(DATA.works.hint) +
       "</div>" +
-      '<div class="wl">' +
+      '<div class="wl" id="wl" tabindex="0" role="region" aria-label="' +
+      e(DATA.works.aria || DATA.works.title) +
+      '">' +
       DATA.works.items.map((w) => '<div class="' + (w.v ? "v" : "h") + '"><b>' + e(w.tag) + "</b>" + e(w.sub) + "</div>").join("") +
-      '</div><div class="wk-mq" aria-hidden="true"><span>' +
+      '</div><div class="wk-ui" id="wkui" aria-hidden="true"><span class="mono" id="wkc"></span><div class="wk-tl"><i></i><b></b></div><span class="mono wk-sw">' +
+      e(DATA.works.hintSwipe || "") +
+      '</span></div><div class="wk-mq" aria-hidden="true"><span>' +
       (e(DATA.works.marquee || "РАБОТЫ · WORKS") + " · ").repeat(4) +
       "</span></div>";
 
@@ -230,6 +238,44 @@ import { DATA } from "./data.js";
     e.preventDefault();
     $("#ok").textContent = DATA.contact.ok;
   });
+  /* CUT 02, телефон: лента работ листается пальцем вбок (нативный scroll-snap), под ней счётчик и мини-таймлайн */
+  (function initWorksStrip() {
+    const wl = $("#wl"),
+      ui = $("#wkui"),
+      cnt = $("#wkc"),
+      tl = ui && ui.querySelector(".wk-tl");
+    if (!wl || !cnt || !tl) return;
+    const pad = (n) => String(n).padStart(2, "0");
+    let raf = 0;
+    function upd() {
+      raf = 0;
+      const items = [...wl.children],
+        max = wl.scrollWidth - wl.clientWidth,
+        mid = wl.scrollLeft + wl.clientWidth / 2;
+      let bi = 0,
+        bd = Infinity;
+      items.forEach((el, i) => {
+        const d = Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid);
+        if (d < bd) {
+          bd = d;
+          bi = i;
+        }
+      });
+      cnt.textContent = pad(bi + 1) + " / " + pad(items.length);
+      tl.style.setProperty("--r", max > 0 ? cl(wl.scrollLeft / max, 0, 1).toFixed(4) : "0");
+    }
+    wl.addEventListener(
+      "scroll",
+      () => {
+        if (wl.scrollLeft > 8) ui.classList.add("moved");
+        if (!raf) raf = requestAnimationFrame(upd);
+      },
+      { passive: true },
+    );
+    addEventListener("resize", upd);
+    addEventListener("load", upd);
+    upd();
+  })();
   /* CUT 03: интерактивный монитор. Клипы таймлайна перетаскиваются и меняются местами (внутри своей дорожки) */
   (function initEditor() {
     const root = $("#ed");
@@ -493,7 +539,7 @@ import { DATA } from "./data.js";
       wOn = true;
       wT0 = performance.now();
       wk.classList.add("in");
-      if (!rm && scrollY > 50) {
+      if (!rm && scrollY > 50 && !WMQ.matches) {
         fl.className = "wow";
         lb.classList.remove("on");
         void fl.offsetWidth;
@@ -539,7 +585,7 @@ import { DATA } from "./data.js";
     const io = new IntersectionObserver(
       (es) =>
         es.forEach((e) => {
-          if (e.isIntersecting && scrollY > 50 && e.target.id !== "works") {
+          if (e.isIntersecting && scrollY > 50 && (e.target.id !== "works" || WMQ.matches)) {
             fl.className = "";
             fl.classList.toggle("hard", e.target.id === "pause");
             void fl.offsetWidth;
@@ -696,7 +742,7 @@ import { DATA } from "./data.js";
     r.autoClear = false;
     r.outputEncoding = T.sRGBEncoding;
     $("#gl").addEventListener("webglcontextlost", () => document.documentElement.classList.add("static"));
-    const PR = [Math.min(devicePixelRatio || 1, 2), 1.5, 1],
+    const PR = WMQ.matches ? [Math.min(devicePixelRatio || 1, 1.5), 1.25, 1] : [Math.min(devicePixelRatio || 1, 2), 1.5, 1],
       LV = 0;
     let lv = 0;
     r.setPixelRatio(PR[0]);
@@ -963,7 +1009,9 @@ import { DATA } from "./data.js";
     };
     let Lz = 60,
       baX = 4,
-      wB = 1;
+      wB = 1,
+      szW = 0,
+      szH = 0;
     function layout() {
       /* размеры берём у самого canvas (CSS 100%), а не innerWidth/innerHeight:
          в Safari они расходятся (тулбар/скроллбар) и scissor уезжает */
@@ -972,7 +1020,12 @@ import { DATA } from "./data.js";
       asp = cw / ch;
       cam.aspect = asp;
       cam.updateProjectionMatrix();
-      r.setSize(cw, ch, false);
+      /* на телефоне resize летит при каждом сворачивании адресной строки: буфер пересоздаём только если размер реально другой */
+      if (cw !== szW || ch !== szH) {
+        szW = cw;
+        szH = ch;
+        r.setSize(cw, ch, false);
+      }
       gH.position.z = zOf(E.hero);
       gB.position.z = zOf(E.ba);
       gW.position.z = zOf(E.works);
@@ -1079,7 +1132,8 @@ import { DATA } from "./data.js";
         eo = 1 - Math.pow(1 - wp, 3),
         burst = wOn ? Math.pow(1 - wp, 2.2) : 0,
         bo = cl(wp * 6, 0, 1);
-      gW.visible = wOn;
+      const wMob = WMQ.matches; /* на телефоне «Работы» — обычная DOM-лента, 3D-лента не рисуется */
+      gW.visible = wOn && !wMob;
       gW.scale.setScalar(wB);
       /* лента раскрывается по вертикали, кромки загораются */
       band.material.opacity = bo;
@@ -1102,7 +1156,7 @@ import { DATA } from "./data.js";
       piv.rotation.y = pry + 1.1 * (1 - eo); /* резкий поворот ленты, который гасится */
       piv.position.z = (camz - gW.position.z) / wB;
       ray.setFromCamera(mv, cam);
-      const hits = wp > 0.85 ? ray.intersectObjects(fr.map((f) => f.userData.m)) : [];
+      const hits = wp > 0.85 && !wMob ? ray.intersectObjects(fr.map((f) => f.userData.m)) : [];
       let hf = hits.length ? hits[0].object.userData.g : null;
       if (hf !== lastH) {
         lastH = hf;

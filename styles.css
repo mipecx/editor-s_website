@@ -1305,9 +1305,6 @@ footer .mono {
   .ed {
     transform: none;
   }
-  .static .wl {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 /* static / fallback blocks */
 .wl,
@@ -1749,4 +1746,343 @@ html.ld-on body {
   50% { transform: translateX(4px); }
   75% { transform: translateX(-3px) skewX(3deg); }
   100% { transform: none; }
+}
+
+/* ============================================================
+   ТЕЛЕФОН. Десктопные стили выше не менялись, всё ниже работает только на узких экранах.
+   Запрос дублирует WMQ в app.js: ≤820px, а также телефон в горизонтальном положении.
+   ============================================================ */
+/* элементы только для телефона: на десктопе скрыты */
+.wk-ui,
+.wn-t {
+  display: none;
+}
+@media (max-width: 820px), (hover: none) and (pointer: coarse) and (max-height: 500px) {
+  /* ---------- CUT 02: лента работ листается вбок, как плёнка ---------- */
+  #works {
+    --vw: min(56vw, 250px, 27svh); /* ширина вертикального кадра: на низких экранах кадр ниже */
+    --hw: min(84vw, 420px); /* ширина горизонтального кадра */
+    min-height: 0;
+    display: block;
+    padding-top: max(12vh, calc(env(safe-area-inset-top, 0px) + 112px));
+    padding-bottom: 8vh;
+    /* анимация въезда ленты не должна раздвигать страницу вбок */
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+  #works > .pn:first-child {
+    position: static;
+  }
+  #wcap,
+  #works > #wcap {
+    display: none;
+  }
+  .wn-d {
+    display: none;
+  }
+  .wn-t {
+    display: inline;
+  }
+  #works .wl {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* лента на всю ширину экрана, мимо боковых полей секции */
+    margin: 28px calc(-1 * clamp(20px, 6vw, 96px)) 0;
+    padding: 36px calc(50vw - var(--vw) / 2);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain; /* край ленты не запускает «назад» браузера */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background-color: #0f0e0c;
+    /* перфорация плёнки: ездит вместе с кадрами */
+    background-image: repeating-linear-gradient(90deg, #3a362e 0 12px, transparent 12px 26px), repeating-linear-gradient(90deg, #3a362e 0 12px, transparent 12px 26px);
+    background-size: 100% 12px, 100% 12px;
+    background-position: 0 10px, 0 calc(100% - 10px);
+    background-repeat: no-repeat;
+    background-attachment: local, local;
+    border-block: 2px solid rgba(255, 214, 10, 0.85);
+    box-shadow: 0 0 24px rgba(255, 214, 10, 0.12);
+  }
+  #works .wl::-webkit-scrollbar {
+    display: none;
+  }
+  #works .wl > div {
+    position: relative;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    border: 2px solid rgba(243, 238, 228, 0.85);
+    border-radius: 6px;
+    color: #e8e2d4;
+    font: 500 11px/1.35 var(--mono);
+    justify-content: flex-end;
+    background-color: #1b1a17;
+    /* линии развёртки + градиент, как на кадрах 3D-ленты */
+    background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 26px), linear-gradient(160deg, #3a3630, #1b1a17);
+    -webkit-tap-highlight-color: transparent;
+  }
+  #works .wl > div:nth-child(3n + 2) {
+    background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 26px), linear-gradient(160deg, #6b5a3a, #2a2418);
+  }
+  #works .wl > div:nth-child(3n) {
+    background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 26px), linear-gradient(160deg, #5a5448, #201e1a);
+  }
+  #works .wl .v {
+    width: var(--vw);
+    aspect-ratio: 9/16;
+  }
+  #works .wl .h {
+    width: var(--hw);
+    aspect-ratio: 16/9;
+    grid-column: auto;
+  }
+  #works .wl > div {
+    padding: 0 12px 12px;
+  }
+  #works .wl b {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font: 700 11px/1 var(--mono);
+  }
+  #works .wl b::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    background: var(--y);
+  }
+  #works .wl > div::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 38px;
+    height: 46px;
+    background: rgba(255, 255, 255, 0.9);
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+    transform: translate(-38%, -50%);
+    transition: transform 0.2s ease;
+  }
+  #works .wl > div:active::after {
+    transform: translate(-38%, -50%) scale(0.86);
+  }
+  /* счётчик + мини-таймлайн под лентой */
+  #works .wk-ui {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 18px;
+  }
+  #wkc {
+    color: var(--y);
+    min-width: 58px;
+  }
+  .wk-tl {
+    --r: 0;
+    position: relative;
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #4a463d;
+  }
+  .wk-tl i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: calc(var(--r) * 100%);
+    border-radius: 3px;
+    background: var(--y);
+  }
+  .wk-tl b {
+    position: absolute;
+    top: -5px;
+    left: calc(var(--r) * 100%);
+    width: 3px;
+    height: 16px;
+    margin-left: -1px;
+    background: var(--y);
+    box-shadow: 0 0 8px var(--y);
+  }
+  .wk-sw {
+    white-space: nowrap;
+    color: var(--w);
+    transition: opacity 0.3s ease;
+  }
+  .wk-ui.moved .wk-sw {
+    opacity: 0;
+  }
+  /* бегущая надпись: не поверх шапки, а лентой под кадрами */
+  #works .wk-mq {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    margin: 26px calc(-1 * clamp(20px, 6vw, 96px)) 0;
+  }
+  #works .wk-mq span {
+    font-size: clamp(54px, 17vw, 96px);
+    -webkit-text-stroke-width: 1.5px;
+  }
+  #works::after {
+    display: none;
+  }
+}
+@media (max-width: 820px) and (prefers-reduced-motion: no-preference), (hover: none) and (pointer: coarse) and (max-height: 500px) and (prefers-reduced-motion: no-preference) {
+  #works .wl,
+  #works .wk-ui {
+    transition:
+      opacity 0.7s ease 0.5s,
+      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.5s;
+  }
+  #works:not(.in) .wl,
+  #works:not(.in) .wk-ui {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+  .wk-sw {
+    animation: wknudge 1.4s ease-in-out infinite;
+  }
+  .wk-ui.moved .wk-sw {
+    animation: none;
+  }
+}
+@keyframes wknudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@media (max-width: 820px) {
+  /* ---------- шапка и отступы ---------- */
+  /* фиксированная шапка не должна накрывать начало секции, когда она «прилипла» к верху экрана */
+  section {
+    padding-top: max(12vh, calc(env(safe-area-inset-top, 0px) + 112px));
+  }
+  #hero,
+  #pause {
+    padding-top: 110px;
+  }
+  #pause {
+    padding-top: 12vh;
+    padding-bottom: 12vh;
+  }
+  .logo {
+    min-width: 0;
+    max-width: 58%;
+  }
+  .logo span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hl {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: break-word;
+  }
+  /* ---------- hero: заголовок виден на первом экране, подпись и кнопка не ломаются ---------- */
+  .slotw {
+    --slot-w: calc(min(42svh, 42vh) * 0.5625);
+    width: 100%;
+  }
+  .slot {
+    height: min(42svh, 42vh);
+  }
+  .ctl,
+  #cap {
+    max-width: 340px;
+  }
+  #cnt {
+    white-space: nowrap;
+  }
+  .slot .lab span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ctl .ghost {
+    padding: 11px 16px;
+    font-size: 12px;
+    border-width: 2px;
+  }
+  #cap {
+    height: 4em;
+  }
+  #hero > div:last-child:empty {
+    display: none; /* пустая третья колонка десктопа не должна давать лишний отступ */
+  }
+  /* ---------- CUT 03: монитор ---------- */
+  /* клип таскается пальцем вбок, а вертикальный жест остаётся за прокруткой страницы */
+  .ed-c,
+  .ed-ruler {
+    touch-action: pan-y;
+  }
+  .ed-b {
+    padding: 11px 16px;
+  }
+  .ed-top span:nth-child(2) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ed {
+    padding: 12px;
+    box-shadow:
+      0 0 0 6px #23211d,
+      0 0 0 8px #3a372f,
+      0 24px 60px rgba(0, 0, 0, 0.6);
+  }
+  /* ---------- формы: iOS приближает страницу, если шрифт поля меньше 16px ---------- */
+  input,
+  textarea {
+    font-size: 16px;
+  }
+  /* ---------- отзывы и карточки ---------- */
+  .q {
+    padding: 20px;
+    gap: 14px;
+  }
+  .av {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+    box-shadow: 0 0 0 6px rgba(255, 214, 10, 0.16);
+  }
+  .fc {
+    min-height: 0;
+    padding: 22px;
+  }
+  .btn.big {
+    padding: 22px 28px;
+  }
+}
+/* канвас высотой «большого» экрана: адресная строка браузера не меняет его размер при скролле */
+@media (max-width: 820px) {
+  #gl {
+    height: 100%;
+    height: 100lvh;
+  }
 }
