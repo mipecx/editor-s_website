@@ -232,12 +232,89 @@ import { DATA } from "./data.js";
     }
   });
   /* before/after */
-  $("#cmp input").addEventListener("input", (e) => $("#cmp").style.setProperty("--p", e.target.value + "%"));
+  (function initCompare() {
+    const cmp = $("#cmp"),
+      cin = cmp.querySelector("input");
+    let cur = 50,
+      to = 50,
+      raf = 0,
+      last = 0,
+      sx = 0,
+      sy = 0,
+      st = 0,
+      lock = "",
+      held = false;
+    const paint = () => {
+        cmp.style.setProperty("--p", cur.toFixed(2) + "%");
+        cin.value = Math.round(cur);
+      },
+      tick = (now) => {
+        /* линия догоняет цель плавно, а не прыгает; скорость не зависит от частоты кадров */
+        const dt = last ? Math.min(64, now - last) : 16;
+        last = now;
+        cur += (to - cur) * (1 - Math.exp(-dt / 55));
+        if (Math.abs(to - cur) < 0.05) {
+          cur = to;
+          raf = last = 0;
+        } else raf = requestAnimationFrame(tick);
+        paint();
+      },
+      go = (v, now) => {
+        to = cl(v, 0, 100);
+        if (now || rm) {
+          cur = to;
+          paint();
+        } else if (!raf) raf = requestAnimationFrame(tick);
+      },
+      pct = (ev) => {
+        const r = cmp.getBoundingClientRect();
+        return ((ev.clientX - r.left) / r.width) * 100;
+      },
+      rm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    /* мышь: достаточно навести, линия едет за курсором. Палец и стилус: тянем, не отпуская */
+    cmp.addEventListener("pointermove", (ev) => {
+      if (ev.pointerType === "mouse") return go(pct(ev));
+      if (!held) return;
+      /* направление жеста определяем по первым пикселям: горизонталь тянет линию, вертикаль отдаём странице */
+      if (!lock) {
+        const dx = Math.abs(ev.clientX - sx),
+          dy = Math.abs(ev.clientY - sy);
+        if (dx < 8 && dy < 8) return;
+        lock = dx > dy ? "x" : "y";
+      }
+      if (lock === "x") go(pct(ev));
+    });
+    cmp.addEventListener("pointerenter", (ev) => {
+      if (ev.pointerType === "mouse") go(pct(ev));
+    });
+    cmp.addEventListener("pointerdown", (ev) => {
+      if (ev.pointerType === "mouse") return go(pct(ev));
+      /* палец: линию не трогаем, пока не ясно, что жест горизонтальный (вертикальный забирает прокрутка страницы) */
+      held = true;
+      lock = "";
+      sx = ev.clientX;
+      sy = ev.clientY;
+      st = performance.now();
+      try {
+        cmp.setPointerCapture(ev.pointerId);
+      } catch (e) {}
+    });
+    const up = (ev) => {
+      if (held && ev && ev.type === "pointerup" && Math.abs(ev.clientX - sx) < 6 && Math.abs(ev.clientY - sy) < 6 && performance.now() - st < 400) go(pct(ev)); /* тап: линия прыгает в точку касания */
+      held = false;
+    };
+    cmp.addEventListener("pointerup", up);
+    cmp.addEventListener("pointercancel", up);
+    cmp.addEventListener("lostpointercapture", up);
+    /* клавиатура: поле остаётся в фокусе, стрелки двигают линию */
+    cin.addEventListener("input", () => go(+cin.value, true));
+  })();
   /* form */
   $("#f").addEventListener("submit", (e) => {
     e.preventDefault();
     $("#ok").textContent = DATA.contact.ok;
   });
+  let wkRush = () => {};
   /* CUT 02, телефон: лента работ листается пальцем вбок (нативный scroll-snap), под ней счётчик и мини-таймлайн */
   (function initWorksStrip() {
     const wl = $("#wl"),
@@ -267,7 +344,7 @@ import { DATA } from "./data.js";
     wl.addEventListener(
       "scroll",
       () => {
-        if (wl.scrollLeft > 8) ui.classList.add("moved");
+        if (wl.scrollLeft > 8 && !wl.classList.contains("rush")) ui.classList.add("moved");
         if (!raf) raf = requestAnimationFrame(upd);
       },
       { passive: true },
@@ -275,6 +352,33 @@ import { DATA } from "./data.js";
     addEventListener("resize", upd);
     addEventListener("load", upd);
     upd();
+    /* вход: лента мчится с конца в начало и тормозит на первом кадре, как при перемотке плёнки */
+    let rushRaf = 0;
+    wkRush = function () {
+      cancelAnimationFrame(rushRaf);
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const max = wl.scrollWidth - wl.clientWidth;
+      if (max <= 0) return;
+      wl.classList.add("rush");
+      wl.scrollLeft = max;
+      const t0 = performance.now() + 500,
+        D = 1900,
+        stop = () => {
+          cancelAnimationFrame(rushRaf);
+          wl.classList.remove("rush");
+        };
+      wl.addEventListener("touchstart", stop, { passive: true, once: true });
+      try {
+        navigator.vibrate && navigator.vibrate([10, 50, 10]);
+      } catch (e) {}
+      (function step(now) {
+        const k = cl((now - t0) / D, 0, 1),
+          e = 1 - Math.pow(1 - k, 4);
+        wl.scrollLeft = max * (1 - e);
+        if (k < 1) rushRaf = requestAnimationFrame(step);
+        else wl.classList.remove("rush");
+      })(performance.now());
+    };
   })();
   /* CUT 03: интерактивный монитор. Клипы таймлайна перетаскиваются и меняются местами (внутри своей дорожки) */
   (function initEditor() {
@@ -539,13 +643,14 @@ import { DATA } from "./data.js";
       wOn = true;
       wT0 = performance.now();
       wk.classList.add("in");
-      if (!rm && scrollY > 50 && !WMQ.matches) {
+      if (!rm && scrollY > 50) {
         fl.className = "wow";
         lb.classList.remove("on");
         void fl.offsetWidth;
         fl.classList.add("on");
-        lb.classList.add("on");
+        if (!WMQ.matches) lb.classList.add("on"); /* шторки только на десктопе */
       }
+      if (WMQ.matches) wkRush();
     } else if (wOn && (b.top > innerHeight || b.bottom < 0)) {
       /* секция целиком ушла с экрана: при следующем заходе вход сыграет заново */
       wOn = false;
@@ -873,8 +978,8 @@ import { DATA } from "./data.js";
       }
     });
     bt.wrapS = T.RepeatWrapping;
-    bt.repeat.set(40, 1);
-    const band = new T.Mesh(new T.CylinderGeometry(R + 0.06, R + 0.06, 4.6, 96, 1, true, Math.PI - 2.2, 4.4), new T.MeshBasicMaterial({ map: bt, side: T.DoubleSide }));
+    bt.repeat.set(57, 1); /* кольцо замкнуто: у ленты нет концов, сколько ни крути */
+    const band = new T.Mesh(new T.CylinderGeometry(R + 0.06, R + 0.06, 4.6, 160, 1, true, 0, Math.PI * 2), new T.MeshBasicMaterial({ map: bt, side: T.DoubleSide }));
     piv.add(band);
     const WS = 0.43,
       WG = 0.22;
@@ -898,7 +1003,7 @@ import { DATA } from "./data.js";
     /* кромки плёнки: загораются, когда лента «раскрывается» */
     const edgeMat = new T.MeshBasicMaterial({ color: Y, transparent: true, opacity: 0, side: T.DoubleSide, fog: false });
     const edges = [1, -1].map((s) => {
-      const m = new T.Mesh(new T.CylinderGeometry(R + 0.07, R + 0.07, 0.05, 96, 1, true, Math.PI - 2.2, 4.4), edgeMat);
+      const m = new T.Mesh(new T.CylinderGeometry(R + 0.07, R + 0.07, 0.05, 160, 1, true, 0, Math.PI * 2), edgeMat);
       m.userData.s = s;
       piv.add(m);
       return m;
@@ -1141,8 +1246,8 @@ import { DATA } from "./data.js";
       edgeMat.opacity = bo;
       edges.forEach((m) => (m.position.y = m.userData.s * 2.3 * band.scale.y));
       /* вспышка света и пылевой взрыв */
-      glow.material.opacity = wOn ? 0.1 + 0.3 * burst : 0;
-      glow.scale.setScalar(1 + burst * 0.8);
+      glow.material.opacity = wOn ? 0.12 + 0.75 * burst : 0;
+      glow.scale.setScalar(1 + burst * 1.6);
       dust.material.opacity = wOn ? cl(wp * 3, 0, 1) * 0.8 : 0;
       dust.scale.setScalar(1 + (1 - eo) * 2.2);
       dust.rotation.y = Math.sin(t * 0.15) * 0.12;
@@ -1153,7 +1258,7 @@ import { DATA } from "./data.js";
         lim = Math.max(0, phs - thv),
         pp = cl((scrollY - q.t) / Math.max(1, q.h - ch), 0, 1);
       pry = ease(pry, (pp - 0.5) * 2 * lim, 0.1);
-      piv.rotation.y = pry + 1.1 * (1 - eo); /* резкий поворот ленты, который гасится */
+      piv.rotation.y = pry + 6.9 * Math.pow(1 - wp, 4); /* лента влетает с раскруткой (больше оборота) и тормозит на месте */
       piv.position.z = (camz - gW.position.z) / wB;
       ray.setFromCamera(mv, cam);
       const hits = wp > 0.85 && !wMob ? ray.intersectObjects(fr.map((f) => f.userData.m)) : [];
@@ -1209,12 +1314,12 @@ import { DATA } from "./data.js";
         all.forEach((o, i) => (o.visible = own.includes(o) && v0[i]));
         r.setScissor(0, ch - bt, cw, bt - t);
         r.clearDepth();
-        const kick = el === E.works && wOn ? Math.pow(1 - wp, 2.5) : 0;
-        cam.fov = 40 + 34 * kick; /* широкий угол → быстрый «наезд» на нормальный */
+        const kick = el === E.works && wOn ? Math.pow(1 - wp, 2.1) : 0;
+        cam.fov = 40 + 50 * kick; /* широкий угол → быстрый «наезд» на нормальный */
         cam.updateProjectionMatrix();
-        cam.rotateZ(kick * 0.14); /* голландский угол, который выпрямляется */
+        cam.rotateZ(kick * 0.26); /* голландский угол, который выпрямляется */
         r.render(sc, cam);
-        cam.rotateZ(-kick * 0.14);
+        cam.rotateZ(-kick * 0.26);
       });
       if (cam.fov !== 40) {
         cam.fov = 40;

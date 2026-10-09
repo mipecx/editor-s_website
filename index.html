@@ -12,6 +12,7 @@
     <div id="ld" aria-hidden="true">
       <div class="ld-half top"><span class="ld-cut mono">CUT 00 · ЗАГРУЗКА</span></div>
       <div class="ld-half bot"></div>
+      <canvas id="ld3" aria-hidden="true"></canvas>
       <div class="ld-core">
         <div class="ld-numw"><div class="ld-num" id="ldn">000</div><div class="ld-num ld-g a"></div><div class="ld-num ld-g b"></div></div>
         <div class="ld-tc mono"><span id="ldt">00:00:00</span><span id="lds">Синхронизирую звук…</span></div>
@@ -35,6 +36,83 @@
           st = document.getElementById("lds"),
           fl = document.getElementById("ldf"),
           last = "";
+        /* 3D-фон: тоннель из спиралей киноплёнки. Строится, как только подтянется three.js; нет WebGL или reduced-motion → остаётся 2D */
+        var cv = document.getElementById("ld3"),
+          g3i = 0,
+          g3 = 0,
+          rr = null,
+          rush0 = 0,
+          reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        function init3() {
+          var T = window.THREE;
+          try { rr = new T.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, powerPreference: "high-performance" }); } catch (e) { rr = null; return; }
+          rr.setClearColor(0x000000, 0);
+          var sc = new T.Scene(),
+            cam = new T.PerspectiveCamera(62, 1, 0.1, 90),
+            grp = new T.Group();
+          sc.fog = new T.Fog(0x171613, 5, 30);
+          sc.add(grp);
+          function tex(a, b, rep) {
+            var c = document.createElement("canvas"), x = c.getContext("2d"), i;
+            c.width = 256; c.height = 128;
+            x.fillStyle = "#0f0e0c"; x.fillRect(0, 0, 256, 128);
+            x.fillStyle = "#5a5548";
+            for (i = 0; i < 8; i++) { x.fillRect(i * 32 + 9, 5, 14, 10); x.fillRect(i * 32 + 9, 113, 14, 10); }
+            var g = x.createLinearGradient(0, 22, 256, 106); g.addColorStop(0, a); g.addColorStop(1, b);
+            x.fillStyle = g; x.fillRect(8, 22, 240, 84);
+            x.fillStyle = "rgba(255,255,255,.1)";
+            for (i = 26; i < 106; i += 10) x.fillRect(8, i, 240, 2);
+            x.fillStyle = "#ffd60a"; x.fillRect(18, 30, 10, 10);
+            x.fillStyle = "rgba(255,255,255,.92)"; x.beginPath(); x.moveTo(114, 48); x.lineTo(148, 64); x.lineTo(114, 80); x.fill();
+            x.strokeStyle = "rgba(243,238,228,.9)"; x.lineWidth = 3; x.strokeRect(8, 22, 240, 84);
+            var t = new T.CanvasTexture(c);
+            t.wrapS = T.RepeatWrapping; t.repeat.set(rep, 1); t.anisotropy = 4;
+            return t;
+          }
+          /* лента, намотанная спиралью вдоль оси z: камера летит внутри */
+          function ribbon(a0, ca, cb) {
+            var N = 260, turns = 4.4, R0 = 3.5, pitch = 7.2, w = 1.7, pos = [], uv = [], idx = [], i, a, z, rep = Math.round((turns * 2 * Math.PI * R0) / (w * 2));
+            for (i = 0; i <= N; i++) {
+              a = a0 + (i / N) * turns * 2 * Math.PI;
+              z = 5 - (i / N) * turns * pitch;
+              pos.push(R0 * Math.cos(a), R0 * Math.sin(a), z - w / 2, R0 * Math.cos(a), R0 * Math.sin(a), z + w / 2);
+              uv.push((i / N), 0, (i / N), 1);
+            }
+            for (i = 0; i < N; i++) { var q = i * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); }
+            var geo = new T.BufferGeometry();
+            geo.setAttribute("position", new T.Float32BufferAttribute(pos, 3));
+            geo.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
+            geo.setIndex(idx);
+            return new T.Mesh(geo, new T.MeshBasicMaterial({ map: tex(ca, cb, rep), side: T.DoubleSide, fog: true }));
+          }
+          grp.add(ribbon(0, "#3a3630", "#1b1a17"), ribbon(2.094, "#7a6330", "#2a2418"), ribbon(4.188, "#5a5448", "#201e1a"));
+          /* пыль в луче проектора */
+          var dp = [], k;
+          for (k = 0; k < 260; k++) { var da = Math.random() * 6.283, dr = Math.random() * 3.2; dp.push(Math.cos(da) * dr, Math.sin(da) * dr, 5 - Math.random() * 40); }
+          var dg = new T.BufferGeometry(); dg.setAttribute("position", new T.Float32BufferAttribute(dp, 3));
+          grp.add(new T.Points(dg, new T.PointsMaterial({ color: 0xffd60a, size: 0.07, transparent: true, opacity: 0.8, fog: true })));
+          function fit() {
+            var w = cv.clientWidth, h = cv.clientHeight;
+            if (!w || !h) return;
+            rr.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+            rr.setSize(w, h, false);
+            cam.aspect = w / h; cam.updateProjectionMatrix();
+          }
+          fit(); addEventListener("resize", fit);
+          cv.classList.add("on");
+          (function loop(now) {
+            g3 = requestAnimationFrame(loop);
+            var rs = rush0 ? Math.min(1, (now - rush0) / 1150) : 0, e2 = rs * rs;
+            grp.rotation.z = now / 1000 * 0.28 + e2 * 1.4;
+            cam.position.z = 4.5 - p * 24 - e2 * 18; /* летим по настоящему прогрессу, на 100% проносимся насквозь */
+            cam.fov = 62 + 38 * e2; cam.updateProjectionMatrix();
+            rr.render(sc, cam);
+          })(performance.now());
+        }
+        function rm3() {
+          if (g3) cancelAnimationFrame(g3);
+          if (rr) { try { rr.dispose(); rr.forceContextLoss(); } catch (e) {} }
+        }
         try { seen = sessionStorage.getItem("ld") === "1"; } catch (e) {}
         if (seen) { L.remove(); root.classList.add("hero-in"); return; }
         root.classList.add("ld-on");
@@ -48,6 +126,7 @@
         function finish() {
           if (done) return;
           done = true;
+          rush0 = performance.now();
           try { sessionStorage.setItem("ld", "1"); } catch (e) {}
           var gs = L.querySelectorAll(".ld-g"), k = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 460;
           for (var i = 0; i < gs.length; i++) gs[i].textContent = n.textContent;
@@ -55,12 +134,13 @@
           setTimeout(function () {
             L.classList.add("go");
             setTimeout(function () { root.classList.remove("ld-on"); root.classList.add("hero-in"); }, 750);
-            setTimeout(function () { L.remove(); }, 1800);
+            setTimeout(function () { L.remove(); rm3(); }, 1800);
           }, k);
         }
         L.addEventListener("click", function () { t = 1; t0 -= 3000; });
         (function tick(now) {
           if (done) return;
+          if (!g3i && !reduce && window.THREE) { g3i = 1; try { init3(); } catch (e) { rm3(); } }
           var cap = Math.min(1, (now - t0) / 1500);
           p = Math.min(cap, p + (t - p) * 0.07 + 0.002, t);
           var v = Math.min(100, Math.round(p * 100)),
