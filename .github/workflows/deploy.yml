@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, v2]
   workflow_dispatch:
 
 permissions:
@@ -18,19 +18,52 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout main (корень сайта)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: src/main
+
+      - name: Checkout v2 (публикуется под /v2/)
+        uses: actions/checkout@v4
+        with:
+          ref: v2
+          path: src/v2
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache-dependency-path: |
+            src/main/package-lock.json
+            src/v2/package-lock.json
+
+      - name: Build main
+        working-directory: src/main
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build v2
+        working-directory: src/v2
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble Pages site
+        run: |
+          mkdir -p site
+          cp -R src/main/dist/. site/
+          mkdir -p site/v2
+          cp -R src/v2/dist/. site/v2/
+
       - uses: actions/configure-pages@v5
         with:
           enablement: true
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
   deploy:
     needs: build
