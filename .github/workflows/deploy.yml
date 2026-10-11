@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, master, v2]
+    branches: [main, master, v2, v3]
   workflow_dispatch:
 
 permissions:
@@ -30,6 +30,12 @@ jobs:
           ref: v2
           path: src/v2
 
+      - name: Checkout v3 (публикуется под /v3/)
+        uses: actions/checkout@v4
+        with:
+          ref: v3
+          path: src/v3
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -37,6 +43,7 @@ jobs:
           cache-dependency-path: |
             src/main/package-lock.json
             src/v2/package-lock.json
+            src/v3/package-lock.json
 
       - name: Build main
         working-directory: src/main
@@ -50,12 +57,20 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build v3
+        working-directory: src/v3
+        run: |
+          npm ci
+          npm run build
+
       - name: Assemble Pages site
         run: |
           mkdir -p site
           cp -R src/main/dist/. site/
           mkdir -p site/v2
           cp -R src/v2/dist/. site/v2/
+          mkdir -p site/v3
+          cp -R src/v3/dist/. site/v3/
 
       - uses: actions/configure-pages@v5
         with:
