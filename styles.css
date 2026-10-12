@@ -7,6 +7,7 @@
   --e:cubic-bezier(.2,.8,.2,1);
   --pad:clamp(20px,4vw,56px);
 }
+html{font-size:min(max(100%,calc(100% + (100vw - 1440px)*.0125)),calc(100% * 1.6))}
 *{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{font:400 1.0625rem/1.6 var(--body);background:#000;color:#fff;overflow-x:hidden;-webkit-font-smoothing:antialiased}
@@ -23,7 +24,7 @@ button{font:inherit}
 .d{background:#000;color:#fff}
 .l{background:#fff;color:#000}
 .sec{padding-block:clamp(72px,11vw,150px)}
-.wrap{width:min(1200px,100% - 2*var(--pad));margin-inline:auto}
+.wrap{width:min(75rem,100% - 2*var(--pad));margin-inline:auto}
 .h2{font:700 clamp(1.7rem,4.2vw,3.6rem)/1.1 var(--disp);letter-spacing:-.03em;max-width:20em;text-wrap:balance}
 .p{max-width:60ch;color:var(--gl)}
 .d .p{color:#bdbdbd}
@@ -102,7 +103,7 @@ body.in .hrow{transition-delay:.15s}
 .reel::-webkit-scrollbar{display:none}
 .reel.fine{cursor:none}
 .rail{display:flex;gap:clamp(12px,1.6vw,22px);width:max-content;padding-block:4px}
-.shot{position:relative;flex:none;height:clamp(300px,58vh,520px);border-radius:4px;overflow:hidden;background:#111;transition:border-radius .5s var(--e)}
+.shot{position:relative;flex:none;height:clamp(18.75rem,58vh,32.5rem);border-radius:4px;overflow:hidden;background:#111;transition:border-radius .5s var(--e)}
 .shot.v{aspect-ratio:9/16}
 .shot.h{aspect-ratio:16/9}
 .shot:hover{border-radius:24px}
@@ -400,3 +401,46 @@ html.cc #beam{opacity:1}
 
 html.theater #cur,html.theater #beam{display:none}
 html.theater #ring,html.theater #dot{opacity:1}
+
+
+/* ===== v4: заставка, кликабельные объекты ===== */
+#boot{position:fixed;inset:0;z-index:200;overflow:hidden;color:#fff;background:radial-gradient(ellipse at 30% 60%,rgba(61,90,254,.22),transparent 60%),#02030a;transition:opacity .9s var(--e)}
+#boot.out{opacity:0;pointer-events:none}
+#bootcv{position:absolute;inset:0;display:block;width:100%;height:100%}
+.bglow{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 50%,rgba(61,90,254,.95),rgba(61,90,254,.55) 40%,rgba(2,3,10,0) 75%)}
+.btop{position:absolute;top:28px;left:0;right:0;text-align:center;font:700 .95rem var(--disp);letter-spacing:.02em;opacity:.8}
+.bt{position:absolute;left:var(--pad);bottom:clamp(36px,7vh,80px);display:grid;gap:10px;pointer-events:none}
+.bn{display:flex;align-items:flex-start;font:700 clamp(3.2rem,11vw,9rem)/1 var(--disp);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.bn i{margin:.2em 0 0 .15em;font-style:normal;font-size:.32em;color:var(--bl)}
+#blab{min-height:1.5em;font-size:clamp(.95rem,1.4vw,1.2rem);color:#cfd6ff}
+.bbar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.1)}
+.bbar i{display:block;height:100%;background:var(--b);transform-origin:0 50%;transform:scaleX(0)}
+#bskip{position:absolute;right:var(--pad);bottom:clamp(36px,7vh,80px);padding:.7em 1.3em;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(0,0,0,.25);color:#fff;font:500 .9rem var(--body);cursor:pointer;transition:background .2s,border-color .2s,scale .35s var(--spr)}
+#bskip:hover{background:var(--b);border-color:var(--b)}
+#bskip:active{scale:.94}
+body.booting{overflow:hidden}
+body.booting,body.booting *{cursor:default!important}
+body.booting #bskip{cursor:pointer!important}
+
+/* подписи до/после как кнопки */
+.tg{pointer-events:auto;cursor:pointer;border:0;transition:scale .35s var(--spr),background .2s}
+.tg:hover{scale:1.08}
+.tg:active{scale:.94}
+
+/* бегущая строка играет */
+.mq-in span{display:inline-block;cursor:pointer}
+.mq-in span.hit{animation:mqhit .6s var(--spr)}
+@keyframes mqhit{0%{transform:none}30%{transform:scale(1.28) rotate(-4deg);color:#000}100%{transform:none}}
+
+/* форматы, шаги, клипы */
+.row{cursor:pointer}
+.row.go .gl .fl{transform:scaleX(1)}
+.row.go .gl circle{fill:var(--b)}
+.row.go h3{color:var(--b)}
+.stp{cursor:pointer}
+.stp.fl .n{animation:flip .9s var(--spr)}
+@keyframes flip{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+.clip.mute .cl{opacity:.28;text-decoration:line-through}
+.trk.lock .ph::before{background:#fff;box-shadow:0 0 0 4px var(--b)}
+html.pick #ring{background:rgba(255,255,255,.18)}
+#replay{margin-left:auto}

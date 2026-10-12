@@ -54,6 +54,7 @@ export const sfx = {
   thud() { if (!ok()) return; tone("sine", 130, 45, 0.16, 0.5); burst("lowpass", 400, 0.7, 0.06, 0.3); sfx._hit(); },
   clap() { if (!ok()) return; burst("bandpass", 1900, 0.8, 0.07, 0.9); tone("sine", 150, 55, 0.14, 0.6); burst("lowpass", 700, 0.5, 0.25, 0.25, 0, 0.01); sfx._hit(); },
   pop(up = true) { if (!ok() || !rate("pop", 60)) return; tone("sine", up ? 420 : 720, up ? 760 : 380, 0.07, 0.12); },
+  note(i = 0) { if (!ok()) return; const sc = [392, 440, 523, 587, 659, 784, 880], f = sc[i % sc.length]; tone("triangle", f, f, 0.55, 0.2); tone("sine", f * 2, f * 2, 0.4, 0.06, 0, 0.01); sfx._hit(); },
   chime() { if (!ok()) return; tone("sine", 880, 880, 0.5, 0.1); tone("sine", 1320, 1320, 0.6, 0.08, 0, 0.08); tone("sine", 1760, 1760, 0.7, 0.05, 0, 0.16); },
   projector() {
     if (!ok()) return;

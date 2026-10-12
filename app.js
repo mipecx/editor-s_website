@@ -12,7 +12,10 @@ const fine = matchMedia("(hover:hover) and (pointer:fine)").matches;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const raf = requestAnimationFrame;
 const TG = D.telegram;
-const S = { p: 0, px: 0, py: 0, pulse: 0, sy: 0 }; /* состояние hero для 3D-сцены */
+const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+const GL = (() => { try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch (e) { return false; } })();
+const S = { p: 0, px: 0, py: 0, pulse: 0, sy: 0, pick: false, api: null, onPick: null };
+if (location.search.includes("debug")) window.__S = S; /* состояние hero для 3D-сцены */
 const I = {
   play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>',
   close: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
@@ -59,7 +62,7 @@ function ba() {
   return sec("ba", "sec l", `<div class="wrap ba">
     <div><h2 class="h2">${b.title}</h2><ul class="pts">${b.points.map((p) => `<li>${p}</li>`).join("")}</ul></div>
     <div class="cmp" id="cmp">${frame("raw")}${frame("fin")}
-      <span class="tg a">${cap(b.rawTag)}</span><span class="tg z">${cap(b.finTag)}</span>
+      <button class="tg a" type="button">${cap(b.rawTag)}</button><button class="tg z" type="button">${cap(b.finTag)}</button>
       <button class="knob" role="slider" aria-label="${b.title}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><i>${I.arrows}</i></button>
     </div></div>`);
 }
@@ -74,7 +77,7 @@ function works() {
 }
 
 function mq() {
-  const one = D.marquee.map((w) => `<span>${w}</span>${I.play}`).join("");
+  const one = D.marquee.map((w, i) => `<span data-i="${i}">${w}</span>${I.play}`).join("");
   return `<div class="mq" aria-hidden="true"><div class="mq-in" id="mq">${one}${one}${one}${one}</div></div>`;
 }
 
@@ -110,7 +113,7 @@ function formats() {
     `<svg class="gl" viewBox="0 0 112 112" stroke="currentColor" stroke-width="3" fill="none">${[0, 1, 2, 3, 4, 5, 6].map((i) => `<circle cx="${14 + (i % 4) * 28}" cy="${i < 4 ? 38 : 76}" r="9" fill="#fff"/>`).join("")}</svg>`,
   ];
   return sec("formats", "sec l", `<div class="wrap"><h2 class="h2">${f.title}</h2><div class="fm">
-    ${f.items.map((it, i) => `<div class="row"><h3>${it.h}</h3><p>${it.p}</p>${g[i % 3]}</div>`).join("")}
+    ${f.items.map((it, i) => `<div class="row" tabindex="0"><h3>${it.h}</h3><p>${it.p}</p>${g[i % 3]}</div>`).join("")}
     <p class="outro">${f.outro}</p></div></div>`);
 }
 
@@ -144,7 +147,7 @@ function contact() {
 
 $("#top").innerHTML = header();
 $("#main").innerHTML = [hero(), ba(), works(), mq(), pr(), pause(), formats(), proc(), reviews(), faq(), contact()].join("");
-$("#foot").innerHTML = `<b>${D.footer.name}</b><span>${D.footer.mono}</span>`;
+$("#foot").innerHTML = `<b>${D.footer.name}</b><span>${D.footer.mono}</span><button class="snd" id="replay" type="button">${D.boot.replay}</button>`;
 
 /* ---------- hero: заголовок как таймлайн ---------- */
 function initHero() {
@@ -172,14 +175,25 @@ function initHero() {
   const step = () => { p += (tp - p) * 0.16; if (Math.abs(tp - p) < 0.0008) p = tp; apply(); loop = p === tp ? 0 : raf(step); };
   const go = (v) => { tp = clamp(v); if (!loop) loop = raf(step); };
   const take = () => { touched = true; };
-  const fromX = (e) => { const r = hero.getBoundingClientRect(); go((e.clientX - r.left - r.width * 0.05) / (r.width * 0.9)); };
+  const fromX = (e) => { const r = trk.getBoundingClientRect(), m = Math.min(48, r.width * 0.04); go((e.clientX - (r.left - m)) / (r.width + 2 * m)); };
   const mv = (e) => {
     const r = hero.getBoundingClientRect();
     S.px = ((e.clientX - r.left) / r.width - 0.5) * 2; S.py = ((e.clientY - r.top) / r.height - 0.5) * 2;
     hero.style.setProperty("--mx", S.px.toFixed(3)); hero.style.setProperty("--my", S.py.toFixed(3));
   };
-  hero.addEventListener("pointermove", (e) => { take(); fromX(e); mv(e); });
-  hero.addEventListener("pointerdown", (e) => { take(); fromX(e); });
+  const ui = ".ht,.trk,.hrow,.hint,a,button";
+  let locked = false;
+  hero.addEventListener("pointermove", (e) => {
+    take(); if (!locked) fromX(e); mv(e);
+    S.pick = !!(S.api && fine && !e.target.closest(ui) && S.api.hover(e.clientX, e.clientY));
+  });
+  hero.addEventListener("pointerleave", () => { S.pick = false; });
+  hero.addEventListener("pointerdown", (e) => { take(); if (!locked) fromX(e); });
+  hero.addEventListener("click", (e) => {
+    if (e.target.closest(ui)) return;
+    if (S.api && S.api.click(e.clientX, e.clientY)) return;
+    locked = !locked; trk.classList.toggle("lock", locked); sfx.pop(locked);
+  });
   trk.addEventListener("keydown", (e) => {
     const k = { ArrowRight: 0.08, ArrowLeft: -0.08 }[e.key];
     if (k) { e.preventDefault(); take(); go(tp + k); } else if (e.key === "Home") go(0); else if (e.key === "End") go(1);
@@ -198,7 +212,7 @@ function initHero() {
       setTimeout(() => document.body.classList.add("in"), 900);
     }, 500);
   };
-  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(ready);
+  Promise.all([fontsReady, bootDone]).then(ready);
   apply();
 }
 
@@ -215,6 +229,14 @@ function initBA() {
     const k = { ArrowRight: 0.05, ArrowLeft: -0.05 }[e.key];
     if (k) { e.preventDefault(); touched = true; set(cur + k); }
   });
+  const anim = (to) => {
+    touched = true; sfx.pop(true);
+    const from = cur, t0 = performance.now();
+    (function s(n) { const k = clamp((n - t0) / 700); set(from + (to - from) * (1 - Math.pow(1 - k, 3) + Math.sin(k * Math.PI) * 0.04)); if (k < 1) raf(s); })(t0);
+  };
+  $(".tg.a", el).addEventListener("click", () => anim(0.96));
+  $(".tg.z", el).addEventListener("click", () => anim(0.04));
+  $$(".tg", el).forEach((b) => b.addEventListener("pointerdown", (e) => e.stopPropagation()));
   if (reduce) return;
   const io = new IntersectionObserver(([e]) => {
     if (!e.isIntersecting) return;
@@ -383,7 +405,11 @@ function initEditor() {
   const end = () => {
     if (!dg) return;
     const { c, lane, over, moved } = dg; dg = null;
-    if (!moved) return;
+    if (!moved) {
+      c.classList.toggle("mute"); sfx.press();
+      live.textContent = (c.classList.contains("mute") ? "Выключен клип " : "Включён клип ") + c.dataset.t;
+      return;
+    }
     over && over.classList.remove("over");
     if (over) { reorder(+lane.dataset.li, swap(+lane.dataset.li, c, over), c); sfx.thud(); }
     else {
@@ -496,7 +522,12 @@ function initMarquee() {
   let x = 0, last = scrollY, vel = 0, sk = 0, half = 0, id = 0;
   const measure = () => (half = el.children[per].offsetLeft - el.children[0].offsetLeft);
   measure(); addEventListener("resize", measure);
-  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(measure);
+  fontsReady.then(measure);
+  el.addEventListener("click", (e) => {
+    const s = e.target.closest("span"); if (!s) return;
+    s.classList.remove("hit"); void s.offsetWidth; s.classList.add("hit");
+    sfx.note(+s.dataset.i); S.pulse = Math.min(1, S.pulse + 0.5);
+  });
   if (reduce) return;
   const tick = () => {
     const dy = scrollY - last; last = scrollY; vel += (dy - vel) * 0.1;
@@ -510,19 +541,79 @@ function initMarquee() {
 
 /* WebGL-сцены: грузятся лениво и только если WebGL доступен */
 function init3D() {
-  try { const c = document.createElement("canvas"); if (!(c.getContext("webgl2") || c.getContext("webgl"))) return; } catch (e) { return; }
+  if (!GL) return;
   const go = () => import("./scenes.js").then((m) => {
-    m.hero($("#cvh"), S);
+    S.api = m.hero($("#cvh"), S);
     const host = $("#clap"), cta = $(".cta .btn");
     const k = m.clap(host, { a: ["Сцена", "01"], b: ["Дубль", "01"], c: ["Монтаж", D.name], d: ["Ролик", "Ваш"] }, () => {
       sfx.clap(); host.classList.remove("hit"); void host.offsetWidth; host.classList.add("hit");
     });
     ["pointerenter", "click"].forEach((ev) => cta.addEventListener(ev, () => k.clap()));
-    host.addEventListener("click", () => k.clap());
+    host.addEventListener("click", () => k.clap(true));
     new IntersectionObserver(([e], o) => { if (e.isIntersecting) { o.disconnect(); setTimeout(() => k.clap(), 350); } }, { threshold: 0.5 }).observe(host);
   }).catch(() => {});
   const run = () => ("requestIdleCallback" in window ? requestIdleCallback(go, { timeout: 1500 }) : setTimeout(go, 300));
-  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(run);
+  Promise.all([fontsReady, bootDone]).then(run);
+}
+
+/* космическая заставка: прогресс = реальная загрузка + время, можно пропустить */
+const BOOT_HTML = `<canvas id="bootcv"></canvas><div class="bglow"></div><div class="btop">${D.name}</div>
+  <div class="bt"><div class="bn"><span id="bnum">0</span><i>%</i></div><p id="blab" aria-live="polite"></p></div>
+  <div class="bbar"><i id="bfill"></i></div><button id="bskip" type="button">${D.boot.skip}</button>`;
+function runBoot(replay) {
+  let el = $("#boot");
+  if (replay && el) return Promise.resolve();
+  if (!el) { el = document.createElement("div"); el.id = "boot"; document.body.appendChild(el); }
+  if ((!D.boot.on && !replay) || reduce || location.search.includes("noboot")) { el.remove(); return Promise.resolve(); }
+  el.className = ""; el.innerHTML = BOOT_HTML;
+  document.body.classList.add("booting");
+  const num = $("#bnum", el), lab = $("#blab", el), fill = $("#bfill", el), glow = $(".bglow", el), btn = $("#bskip", el);
+  const API = { p: 0, diving: false, fast: false, finished: false, glow: 0 };
+  const real = { fonts: 0, three: 0 };
+  let scene = null, skip = false, shown = 0, lastLab = -1, ended = false, diveAt = 0;
+  const t0 = performance.now(), T = D.boot.time;
+  fontsReady.then(() => (real.fonts = 1));
+  if (GL) import("./scenes.js").then((m) => { try { scene = m.boot($("#bootcv", el), API); } catch (e) { scene = null; } real.three = 1; }).catch(() => (real.three = 1));
+  else real.three = 1;
+  return new Promise((resolve) => {
+    const doSkip = () => { skip = true; API.fast = true; };
+    const key = (e) => { if (["Escape", " ", "Enter"].includes(e.key)) { e.preventDefault(); doSkip(); } };
+    btn.addEventListener("click", (e) => { e.stopPropagation(); doSkip(); });
+    el.addEventListener("click", doSkip); addEventListener("keydown", key);
+    const end = () => {
+      if (ended) return; ended = true; removeEventListener("keydown", key);
+      el.classList.add("out"); resolve();
+      setTimeout(() => { scene && scene.dispose(); el.remove(); document.body.classList.remove("booting"); }, 950);
+    };
+    const tick = (now) => {
+      const timeP = clamp((now - t0) / T), realP = (real.fonts + real.three) / 2;
+      const hold = parseFloat(new URLSearchParams(location.search).get("bootp"));
+      const target = skip ? 1 : isFinite(hold) ? hold : Math.min(timeP, 0.12 + 0.88 * realP);
+      shown += (target - shown) * (skip ? 0.25 : 0.07);
+      if (target >= 1 && shown > 0.992) shown = 1;
+      API.p = shown; num.textContent = Math.round(shown * 100); fill.style.transform = `scaleX(${shown})`;
+      const li = Math.min(D.boot.steps.length - 1, Math.floor(shown * D.boot.steps.length));
+      if (li !== lastLab) { lastLab = li; lab.textContent = D.boot.steps[li]; }
+      glow.style.opacity = API.glow;
+      if (shown >= 1 && !API.diving) { API.diving = true; diveAt = now; if (!scene) API.finished = true; }
+      if (API.diving && now - diveAt > 2600) API.finished = true;
+      if (now - t0 > 14000 && !isFinite(hold)) API.finished = true;
+      if (API.finished) return end();
+      raf(tick);
+    };
+    raf(tick);
+  });
+}
+
+/* кликабельные мелочи: строки форматов, шаги, повтор заставки */
+function initToys() {
+  $$(".row").forEach((r) => {
+    const f = () => { r.classList.toggle("go"); sfx.pop(r.classList.contains("go")); };
+    r.addEventListener("click", f);
+    r.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } });
+  });
+  $$(".stp").forEach((s, i) => s.addEventListener("click", () => { s.classList.remove("fl"); void s.offsetWidth; s.classList.add("fl"); sfx.tick(1000 + i * 220, 0, 0.12); sfx.thud(); }));
+  $("#replay").addEventListener("click", () => { if (!$("#boot")) runBoot(true); });
 }
 
 function initSound() {
@@ -531,6 +622,7 @@ function initSound() {
   b.addEventListener("click", async () => { await sfx.toggle(); sync(); });
   addEventListener("pointerdown", () => sfx.unlock(), { passive: true });
   sfx.onHit = () => { S.pulse = Math.min(1, S.pulse + 0.7); };
+  S.onPick = (k) => { if (k === "cut") sfx.cut(0); else if (k === "orb") sfx.chime(); else { sfx.pop(true); sfx.tick(2400, 0, 0.1); } };
   try {
     if (!localStorage.getItem("sndtip")) setTimeout(() => { b.classList.add("tip"); setTimeout(() => b.classList.remove("tip"), 5200); localStorage.setItem("sndtip", "1"); }, 3800);
   } catch (e) {}
@@ -577,7 +669,8 @@ function initFX() {
   root.classList.add("cc");
   addEventListener("pointermove", (e) => {
     x = e.clientX; y = e.clientY;
-    ts = e.target.closest("a,button,.btn,[role=button],[role=slider],.clip,.cmp,.trk") ? 1.8 : 1;
+    ts = S.pick || e.target.closest("a,button,.btn,[role=button],[role=slider],.clip,.cmp,.trk,.row,.stp,.tg,.mq-in span") ? 1.8 : 1;
+    root.classList.toggle("pick", !!S.pick);
     root.classList.toggle("cur-reel", !!e.target.closest(".reel"));
     root.classList.toggle("cur-text", !!e.target.closest("input,textarea"));
     go();
@@ -639,4 +732,5 @@ function initTheater() {
   addEventListener("keydown", (e) => { if (th.hidden) return; if (e.key === "Escape") close(); if (e.key === "Tab") { e.preventDefault(); x.focus(); } });
 }
 
-initHero(); initBA(); initWorks(); initEditor(); initReviews(); initFaq(); initForm(); initMarquee(); initGlobal(); initSound(); initTactile(); initTheater(); initFX(); initKinetic(); init3D();
+const bootDone = runBoot();
+initHero(); initBA(); initWorks(); initEditor(); initReviews(); initFaq(); initForm(); initMarquee(); initGlobal(); initSound(); initTactile(); initTheater(); initFX(); initKinetic(); initToys(); init3D();
