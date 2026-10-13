@@ -1,11 +1,13 @@
 /* v5 — сборка «фильма»: сцены по порядку, затем их оживление. */
 import "./styles/base.css";
 import "./styles/nav.css";
+import "./styles/entry.css";
 import { DATA as D } from "./data.js";
 import { $, $$ } from "./lib/dom.js";
 import { motion } from "./lib/motion.js";
 import { renderHeader, initNav } from "./lib/nav.js";
 import { sound } from "./lib/sound.js";
+import * as entry from "./scenes/entry.js";
 
 /* у каждой сцены: id, render(D) → html, init(root, ctx) */
 const SCENES = [];
@@ -22,7 +24,9 @@ const syncSound = () => { snd.setAttribute("aria-pressed", String(sound.on)); $(
 snd.addEventListener("click", () => { sound.on ? sound.disable() : sound.enable(); syncSound(); });
 
 const ctx = { D, motion, sound, syncSound };
+document.body.insertAdjacentHTML("afterbegin", entry.render(D));
 motion.start();
+entry.init($("#entry"), ctx);
 SCENES.forEach((s) => s.init(document.getElementById(s.id), ctx));
 const named = $$("#film > section[data-scene]");
 if (named.length) initNav(named, D.scenes);
