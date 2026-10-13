@@ -8,6 +8,7 @@ import "./styles/works.css";
 import "./styles/editing.css";
 import "./styles/services.css";
 import "./styles/voices.css";
+import "./styles/finale.css";
 import { DATA as D } from "./data.js";
 import { $, $$ } from "./lib/dom.js";
 import { motion } from "./lib/motion.js";
@@ -20,12 +21,14 @@ import * as works from "./scenes/works.js";
 import * as editing from "./scenes/editing.js";
 import * as services from "./scenes/services.js";
 import * as voices from "./scenes/voices.js";
+import * as finale from "./scenes/finale.js";
 
 /* у каждой сцены: id, render(D) → html, init(root, ctx) */
-const SCENES = [opening, beforeAfter, works, editing, services, voices];
+const SCENES = [opening, beforeAfter, works, editing, services, voices, finale];
 
 $("#top").innerHTML = renderHeader(D);
 $("#film").innerHTML = SCENES.map((s) => s.render(D)).join("");
+$("#foot").innerHTML = finale.renderFooter(D);
 const grain = document.createElement("div");
 grain.id = "grain"; grain.setAttribute("aria-hidden", "true");
 document.body.appendChild(grain);
