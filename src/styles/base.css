@@ -26,6 +26,7 @@ body {
   font: 400 17px/1.55 var(--sans); overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
+[hidden] { display: none !important; }
 img, video, svg { display: block; max-width: 100%; }
 button { font: inherit; color: inherit; }
 a { color: inherit; }

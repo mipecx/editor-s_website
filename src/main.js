@@ -4,6 +4,7 @@ import "./styles/nav.css";
 import "./styles/entry.css";
 import "./styles/opening.css";
 import "./styles/beforeAfter.css";
+import "./styles/works.css";
 import { DATA as D } from "./data.js";
 import { $, $$ } from "./lib/dom.js";
 import { motion } from "./lib/motion.js";
@@ -12,9 +13,10 @@ import { sound } from "./lib/sound.js";
 import * as entry from "./scenes/entry.js";
 import * as opening from "./scenes/opening.js";
 import * as beforeAfter from "./scenes/beforeAfter.js";
+import * as works from "./scenes/works.js";
 
 /* у каждой сцены: id, render(D) → html, init(root, ctx) */
-const SCENES = [opening, beforeAfter];
+const SCENES = [opening, beforeAfter, works];
 
 $("#top").innerHTML = renderHeader(D);
 $("#film").innerHTML = SCENES.map((s) => s.render(D)).join("");
