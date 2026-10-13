@@ -24,7 +24,9 @@ export function initNav(sections, labels) {
     now.textContent = labels[i] || "";
   };
   btns.forEach((b) => b.addEventListener("click", () => motion.scrollTo(sections[+b.dataset.i])));
-  sections.forEach((s, i) => ScrollTrigger.create({ trigger: s, start: "top 55%", end: "bottom 55%", onToggle: (e) => e.isActive && setActive(i) }));
+  /* у закреплённой сцены длина — вся обёртка закрепления (pin-spacer), а не один экран */
+  const span = (s) => (s.parentElement.classList.contains("pin-spacer") ? s.parentElement : s);
+  sections.forEach((s, i) => ScrollTrigger.create({ trigger: span(s), start: "top 55%", end: "bottom 55%", onToggle: (e) => e.isActive && setActive(i) }));
   ScrollTrigger.create({ start: 0, end: "max", onUpdate: (e) => prog.style.setProperty("--p", e.progress.toFixed(4)) });
   setActive(0);
 }

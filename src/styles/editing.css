@@ -21,7 +21,7 @@
 .k-t .clip.live { background: #2b2e33; } .k-a .clip.live { background: #26332a; }
 .tl-head { position: absolute; top: 12px; bottom: 6px; left: calc(96px + (100% - 96px - 16px) * var(--ph, 0)); width: 2px; background: var(--accent); pointer-events: none; }
 .tl-head::before { content: ""; position: absolute; top: -2px; left: 50%; width: 12px; height: 12px; translate: -50% 0; background: var(--accent); clip-path: polygon(0 0, 100% 0, 50% 100%); }
-.tl-tc { position: absolute; top: -26px; left: 8px; color: var(--accent); }
+.tl-tc { position: absolute; top: -26px; right: 8px; color: var(--accent); white-space: nowrap; }
 
 /* reduced-motion: принципы обычным списком, таймлайн как схема */
 .editing.list .ed-points { display: grid; gap: 28px; min-height: 0; }

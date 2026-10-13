@@ -33,7 +33,7 @@ export function init(root, { motion, sound }) {
   }
   /* паразит i вырезается на своей доле прокрутки; перед этим ~0.07 он «помечен» */
   const at = (i) => 0.12 + (i / n) * 0.62;
-  ScrollTrigger.create({
+  const st = ScrollTrigger.create({
     trigger: root, start: "top top", end: "+=130%", pin: true, scrub: true,
     onUpdate: ({ progress: p }) => {
       root.style.setProperty("--p", p.toFixed(3));
@@ -46,4 +46,6 @@ export function init(root, { motion, sound }) {
       root.classList.toggle("done", p > 0.8);
     },
   });
+  /* Tab на ещё невидимую кнопку — докручиваем сцену до конца, чтобы она проявилась */
+  after.addEventListener("focusin", () => { if (!after.classList.contains("in")) motion.scrollTo(st.end); });
 }
