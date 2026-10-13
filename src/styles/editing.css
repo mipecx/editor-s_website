@@ -1,0 +1,40 @@
+.editing { min-height: 100vh; min-height: 100svh; display: grid; align-items: center; padding: 90px 0 40px; }
+.ed-in { display: grid; gap: 40px; }
+.ed-head { display: grid; gap: 14px; }
+
+.ed-points { position: relative; min-height: 190px; }
+.ed-point { position: absolute; inset: 0; display: grid; align-content: start; gap: 10px; opacity: 0; transform: translateY(18px); transition: opacity .5s var(--ease), transform .6s var(--ease); pointer-events: none; }
+.ed-point.on { opacity: 1; transform: none; }
+.ed-point .mono { color: var(--accent); }
+.ed-point h3 { font: 500 clamp(48px, 7vw, 96px)/1 var(--serif); }
+.ed-point p { color: var(--muted); max-width: 46ch; font-size: 18px; }
+
+.tl { position: relative; padding: 26px 0 8px; border-radius: 12px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); padding-left: 0; padding-right: 16px; }
+.tl-ruler { position: relative; height: 14px; margin: 0 0 10px 96px; border-bottom: 1px solid var(--line); }
+.tl-ruler i { position: absolute; bottom: -5px; width: 9px; height: 9px; translate: -50% 0; rotate: 45deg; background: var(--muted); }
+.tl-row { display: grid; grid-template-columns: 96px 1fr; align-items: center; margin-bottom: 6px; }
+.tl-name { padding-left: 16px; font-size: 11px; }
+.tl-lane { display: flex; gap: 3px; height: 42px; }
+.clip { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: flex; align-items: center; padding: 0 10px; border-radius: 6px; font-size: 13px; color: var(--muted); background: #221f19; transition: background .3s, color .3s; }
+.k-v .clip { background: #2a2219; } .k-t .clip { background: #1f2124; } .k-a .clip { background: #1d241e; }
+.clip.live { color: var(--text); background: #3a2a1e; box-shadow: inset 0 0 0 1px var(--accent); }
+.k-t .clip.live { background: #2b2e33; } .k-a .clip.live { background: #26332a; }
+.tl-head { position: absolute; top: 12px; bottom: 6px; left: calc(96px + (100% - 96px - 16px) * var(--ph, 0)); width: 2px; background: var(--accent); pointer-events: none; }
+.tl-head::before { content: ""; position: absolute; top: -2px; left: 50%; width: 12px; height: 12px; translate: -50% 0; background: var(--accent); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.tl-tc { position: absolute; top: -26px; left: 8px; color: var(--accent); }
+
+/* reduced-motion: принципы обычным списком, таймлайн как схема */
+.editing.list .ed-points { display: grid; gap: 28px; min-height: 0; }
+.editing.list .ed-point { position: static; opacity: 1; transform: none; }
+.editing.list .tl-head { display: none; }
+
+@media (max-width: 900px) {
+  .ed-in { gap: 24px; }
+  .ed-head .lead { display: none; }
+  .ed-points { min-height: 170px; }
+  .tl-ruler { margin-left: 64px; }
+  .tl-row { grid-template-columns: 64px 1fr; }
+  .tl-name { padding-left: 10px; font-size: 10px; }
+  .tl-head { left: calc(64px + (100% - 64px - 16px) * var(--ph, 0)); }
+  .clip { padding: 0 6px; font-size: 11px; }
+}
