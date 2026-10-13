@@ -20,7 +20,7 @@ export const motion = {
     let t = 0;
     addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => ScrollTrigger.refresh(), 200); });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ScrollTrigger.refresh());
-    if (this.reduced) return;
+    if (this.reduced) return document.documentElement.classList.add("reduced");
     const lenis = (this.lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 0.9 }));
     lenis.on("scroll", ScrollTrigger.update);
     gsap.ticker.add((time) => lenis.raf(time * 1000));
