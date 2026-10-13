@@ -32,10 +32,13 @@
 .scenes button[aria-current] { color: var(--text); border-left-color: var(--accent); }
 .scenes button:hover { color: var(--text); }
 
-@media (max-width: 900px) {
+/* боковой указатель — только там, где он не наезжает на контент */
+@media (max-width: 1359px) {
   .scenes { display: none; }
-  .now { display: block; margin-right: auto; }
+  .now { display: block; margin-right: auto; color: var(--text); }
   .logo { margin-right: 0; }
+}
+@media (max-width: 900px) {
   .logo span:last-child { display: none; }
   .cta-top { display: none; }
   #top { height: 60px; gap: 12px; }

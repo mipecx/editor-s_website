@@ -1,0 +1,25 @@
+.services, .voices { padding: 140px 0 60px; }
+.fmts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+.fmt { display: grid; gap: 12px; align-content: start; padding: 28px; border-radius: 14px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); transition: box-shadow .4s var(--ease), translate .4s var(--ease); }
+.fmt:hover { translate: 0 -4px; box-shadow: 0 0 0 1px var(--muted); }
+.fmt svg { width: 64px; height: 64px; color: var(--accent); margin-bottom: 8px; }
+.fmt h3 { font: 500 30px/1.1 var(--serif); }
+.fmt p { color: var(--muted); }
+.outro { margin-top: 24px; color: var(--muted); }
+
+.proc-t { margin-top: 140px; }
+.steps { position: relative; list-style: none; margin: 48px 0 0; padding: 0 0 0 36px; display: grid; gap: 44px; }
+.steps::before, .steps-line { content: ""; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.steps-line { background: var(--accent); transform-origin: 50% 0; }
+.step { position: relative; display: grid; grid-template-columns: 110px 1fr; gap: 20px; }
+.step::before { content: ""; position: absolute; left: -36px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 2px var(--accent); }
+.step-n { color: var(--accent); padding-top: 4px; }
+.step h3 { font: 500 clamp(28px, 3.4vw, 40px)/1.1 var(--serif); }
+.step p { color: var(--muted); margin-top: 6px; max-width: 52ch; }
+
+@media (max-width: 900px) {
+  .services, .voices { padding: 110px 0 40px; }
+  .fmts { grid-template-columns: 1fr; }
+  .step { grid-template-columns: 1fr; gap: 4px; }
+  .proc-t { margin-top: 100px; }
+}
